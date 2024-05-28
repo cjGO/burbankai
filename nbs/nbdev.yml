@@ -1,0 +1,9 @@
+project:
+  output-dir: _docs
+
+website:
+  title: "burbankai"
+  site-url: "https://cjgo.github.io/burbankai"
+  description: "Pytorch Breeding"
+  repo-branch: main
+  repo-url: "https://github.com/cjgo/burbankai"
