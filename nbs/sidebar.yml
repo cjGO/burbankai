@@ -1,0 +1,8 @@
+website:
+  sidebar:
+    contents:
+      - index.ipynb
+      - 00_core.ipynb
+      - 01_Individuals.ipynb
+      - 02_Traits.ipynb
+      - 03_gametes.ipynb

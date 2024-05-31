@@ -5,4 +5,7 @@ d = { 'settings': { 'branch': 'main',
                 'doc_host': 'https://cjgo.github.io',
                 'git_url': 'https://github.com/cjgo/burbankai',
                 'lib_path': 'burbankai'},
-  'syms': {'burbankai.core': {'burbankai.core.foo': ('core.html#foo', 'burbankai/core.py')}}}
+  'syms': { 'burbankai.core': {'burbankai.core.say_hello': ('core.html#say_hello', 'burbankai/core.py')},
+            'burbankai.individual': { 'burbankai.individual.Individual': ('individuals.html#individual', 'burbankai/individual.py'),
+                                      'burbankai.individual.Individual.allele_dosage': ( 'individuals.html#individual.allele_dosage',
+                                                                                         'burbankai/individual.py')}}}
