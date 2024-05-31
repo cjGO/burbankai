@@ -17,5 +17,28 @@ pip install burbankai
 Fill me in please! Don’t forget code examples:
 
 ``` python
-1+1
+# Example usage
+ploidy = 2
+n_chromosomes = 4
+n_loci_per_chr = 5
+
+random_haplotype = torch.randint(0, 2, (ploidy, n_chromosomes, n_loci_per_chr))
+ind = Individual(haplotypes=random_haplotype)
+print(ind)
+ind.allele_dosage()
 ```
+
+    Individual(haplotypes=tensor([[[0, 1, 0, 0, 1],
+             [0, 1, 0, 0, 0],
+             [0, 1, 1, 0, 1],
+             [1, 0, 1, 0, 0]],
+
+            [[0, 0, 0, 1, 1],
+             [1, 1, 1, 0, 0],
+             [0, 1, 1, 1, 1],
+             [1, 1, 0, 0, 0]]]), phenotype=None, genetic_values=None, sex=None, id=None, mother_id=None, father_id=None)
+
+    tensor([[0, 1, 0, 1, 2],
+            [1, 2, 1, 0, 0],
+            [0, 2, 2, 1, 2],
+            [2, 1, 1, 0, 0]])
