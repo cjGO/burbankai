@@ -6,7 +6,6 @@ __all__ = ['Genome', 'Individual', 'Population', 'create_uniform_genetic_map', '
 # %% ../nbs/01_core.ipynb 4
 import attr
 import torch
-import numpy as np
 from typing import List, Tuple, Union, Callable, Optional
 
 # %% ../nbs/01_core.ipynb 6
