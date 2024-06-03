@@ -28,6 +28,10 @@ class Genome:
     number_chromosomes: int
     loci_per_chromosome: int
     genetic_map: torch.Tensor
+    shape: torch.Tensor
+        
+    def shape(self):
+        return self.ploidy, self.number_chromosomes, self.loci_per_chromosome
 
     def __attrs_post_init__(self):
         """
@@ -41,6 +45,10 @@ class Genome:
         for chrom_map in self.genetic_map:
             if not (chrom_map[0] == 0 and all(x < y for x, y in zip(chrom_map, chrom_map[1:]))):
                 raise ValueError("The genetic map must start at 0 and be strictly increasing for each chromosome.")
+                
+                        # Set the shape attribute
+        self.shape = (self.ploidy, self.number_chromosomes, self.loci_per_chromosome)
+
 
 
 # %% ../nbs/01_core.ipynb 7
@@ -89,7 +97,7 @@ class Population:
     individuals: List[Individual]
     id: Optional[str] = None
 
-# %% ../nbs/01_core.ipynb 9
+# %% ../nbs/01_core.ipynb 10
 def create_uniform_genetic_map(number_chromosomes: int, loci_per_chromosome: int, chromosome_length: float = 100.0) -> torch.Tensor:
     """
     Creates a uniform genetic map with equally spaced loci on each chromosome.
@@ -105,7 +113,7 @@ def create_uniform_genetic_map(number_chromosomes: int, loci_per_chromosome: int
     return torch.arange(0, chromosome_length, chromosome_length / loci_per_chromosome).repeat(number_chromosomes, 1)
 
 
-# %% ../nbs/01_core.ipynb 10
+# %% ../nbs/01_core.ipynb 11
 def create_random_founder_pop(genome: Genome, n_founders: int) -> torch.Tensor:
     """
     Creates a tensor of random haplotypes for multiple founder individuals based on the provided genome.
