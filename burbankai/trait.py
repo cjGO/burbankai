@@ -114,6 +114,10 @@ def scale_marker_effects(marker_effects: torch.Tensor,
 
 
 # %% ../nbs/02_trait.ipynb 5
+import torch
+import attr
+from typing import Tuple, Optional, List
+
 @attr.s(auto_attribs=True)
 class TraitA:
     """
@@ -168,7 +172,7 @@ class TraitA:
         # Calculate the mean genetic value of the founder population (without scaling)
         founder_genetic_values = (self.founder_pop.float() * self.additive_effects).sum(dim=(1, 2, 3))
         mean_founder_gv = founder_genetic_values.mean().item()
-        return mean_founder_gv
+        return self.target_mean - mean_founder_gv 
 
     def _calculate_scaled_additive_dosages(self, genotypes: torch.Tensor) -> torch.Tensor:
         """
@@ -200,7 +204,7 @@ class TraitA:
         self.additive_effects = self.additive_effects * scaling_factor
 
         # Recalculate the intercept after scaling
-        self.intercept = self.target_mean - self.calculate_genetic_value(self.founder_pop).mean().item()
+        # self.intercept = self._calculate_intercept() 
 
     def calculate_genetic_value(self, genotypes: torch.Tensor) -> torch.Tensor:
         """
@@ -222,5 +226,5 @@ class TraitA:
         # Apply the additive effects to the scaled dosages, only at QTL positions
         additive_genetic_values = (scaled_dosages * self.additive_effects).sum(dim=(1, 2, 3))
 
-        # Add the target mean to adjust the mean genetic value
-        return additive_genetic_values + self.target_mean
+        # Add the intercept to adjust the mean genetic value
+        return additive_genetic_values + self.intercept
