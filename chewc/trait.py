@@ -4,7 +4,7 @@
 __all__ = ['select_qtl_loci', 'generate_marker_effects', 'calculate_genetic_variance', 'scale_marker_effects', 'TraitA']
 
 # %% ../nbs/02_trait.ipynb 4
-from burbankai.core import *
+from .core import *
 
 import torch
 import attr
