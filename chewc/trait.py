@@ -228,3 +228,38 @@ class TraitA:
 
         # Add the intercept to adjust the mean genetic value
         return additive_genetic_values + self.intercept
+    
+    def setPheno(self, genotypes: torch.Tensor, 
+                   h2: Optional[float] = None, 
+                   varE: Optional[float] = None) -> torch.Tensor:
+        """
+        Simulates phenotypes for individuals based on their genotypes, 
+        heritability (h2), and environmental variance (varE). 
+        Either h2 or varE needs to be specified.
+
+        Args:
+        ----
+        genotypes (torch.Tensor): Genotypes of the individuals.
+                                  Shape: (n_individuals, ploidy, number_chromosomes, loci_per_chromosome)
+        h2 (Optional[float]): Heritability of the trait. Defaults to None.
+        varE (Optional[float]): Environmental variance. Defaults to None.
+
+        Returns:
+        -------
+        torch.Tensor: A tensor of simulated phenotypes for each individual. Shape: (n_individuals,).
+        """
+        if (h2 is None and varE is None) or (h2 is not None and varE is not None):
+            raise ValueError("Either 'h2' or 'varE' must be specified, but not both.")
+
+        genetic_values = self.calculate_genetic_value(genotypes)
+
+        if h2 is not None:
+            # Calculate environmental variance based on heritability
+            varE = self.target_variance * (1 - h2) / h2
+
+        # Simulate environmental effects
+        environmental_effects = torch.randn(genotypes.shape[0]) * torch.sqrt(varE)
+
+        # Calculate phenotypes
+        phenotypes = genetic_values + environmental_effects
+        return phenotypes

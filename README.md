@@ -37,15 +37,17 @@ pip install chew-c
 First, define the genome of your crop
 
 ``` python
+#boilerplate example
 ploidy = 2
 number_chromosomes = 10
-loci_per_chromosome = 100
+loci_per_chromosome = 1000
 n_founders = 50
 genetic_map = create_random_genetic_map(number_chromosomes,loci_per_chromosome)
 crop_genome = Genome(ploidy, number_chromosomes, loci_per_chromosome, genetic_map)
 founder_pop = create_random_founder_pop(crop_genome , n_founders)
+```
 
-
+``` python
 qtl_map = select_qtl_loci(20, crop_genome)
 marker_fx = generate_marker_effects(qtl_map)
 
@@ -60,6 +62,5 @@ print(make_DH(genetic_map, founder_pop[0]).shape)
 print(make_cross(genetic_map, founder_pop[1], founder_pop[2]).shape)
 ```
 
-    torch.Size([2, 10, 100])
-
-    NameError: name 'torch' is not defined
+    torch.Size([2, 10, 1000])
+    torch.Size([2, 10, 1000])

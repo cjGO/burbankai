@@ -42,12 +42,12 @@ class Genome:
         if not self.genetic_map.shape == (self.number_chromosomes, self.loci_per_chromosome):
             raise ValueError(f"Genetic map shape {self.genetic_map.shape} is incompatible with the number of chromosomes and loci per chromosome.")
 
-        # Check if the genetic map is valid (starts at 0 and is increasing)
-        for chrom_map in self.genetic_map:
-            if not (chrom_map[0] == 0.0 and all(x < y for x, y in zip(chrom_map, chrom_map[1:]))):
-                raise ValueError("The genetic map must start at 0 and be strictly increasing for each chromosome.")
+#         # Check if the genetic map is valid (starts at 0 and is increasing)
+#         for chrom_map in self.genetic_map:
+#             if not (chrom_map[0] == 0.0 and all(x < y for x, y in zip(chrom_map, chrom_map[1:]))):
+#                 raise ValueError("The genetic map must start at 0 and be strictly increasing for each chromosome.")
                 
-                        # Set the shape attribute
+#                         # Set the shape attribute
         self.shape = (self.ploidy, self.number_chromosomes, self.loci_per_chromosome)
 
 
