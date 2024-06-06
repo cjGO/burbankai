@@ -40,7 +40,7 @@ First, define the genome of your crop
 #boilerplate example
 ploidy = 2
 number_chromosomes = 10
-loci_per_chromosome = 1000
+loci_per_chromosome = 100
 n_founders = 50
 genetic_map = create_random_genetic_map(number_chromosomes,loci_per_chromosome)
 crop_genome = Genome(ploidy, number_chromosomes, loci_per_chromosome, genetic_map)
@@ -53,14 +53,65 @@ marker_fx = generate_marker_effects(qtl_map)
 
 founder_genetic_variance = calculate_genetic_variance(founder_pop,marker_fx,crop_genome)
 scaled_marker_fx = scale_marker_effects(marker_fx, founder_genetic_variance, 0.5)
+
+
+traita = TraitA(qtl_map, scaled_marker_fx,crop_genome, founder_pop,1.0,0.0)
 ```
 
 ``` python
-#DH the first individual
-print(make_DH(genetic_map, founder_pop[0]).shape)
-#cross individual 2 and 3
-print(make_cross(genetic_map, founder_pop[1], founder_pop[2]).shape)
+# recurrent truncation selection
+
+means = []
+variances = []
+traita = TraitA(qtl_map, scaled_marker_fx,crop_genome, founder_pop,1.0,0.0)
+
+
+tgv = traita.calculate_genetic_value(founder_pop)
+means.append(tgv.mean())
+variances.append(tgv.var())
+                 
+                 
+years = 5
+
+new_pop = random_crosses(founder_pop, len(founder_pop),genetic_map)
+tgv = traita.calculate_genetic_value(new_pop)
+means.append(tgv.mean())
+variances.append(tgv.var())
+                 
+for i in range(years-1):
+    tgv = traita.calculate_genetic_value(new_pop)
+    truncate = truncate_select(tgv)
+    new_pop = random_crosses(new_pop[truncate], len(new_pop),genetic_map)
+    means.append(tgv.mean())
+    variances.append(tgv.var())
 ```
 
-    torch.Size([2, 10, 1000])
-    torch.Size([2, 10, 1000])
+``` python
+# Create a figure and axis
+fig, ax1 = plt.subplots()
+
+# Plot means
+ax1.plot(means, color='blue', marker='o', label='Mean')
+ax1.set_xlabel('Index')
+ax1.set_ylabel('Mean', color='blue')
+ax1.tick_params(axis='y', labelcolor='blue')
+
+# Create a second y-axis to plot variances
+ax2 = ax1.twinx()
+ax2.plot(variances, color='red', marker='x', label='Variance')
+ax2.set_ylabel('Variance', color='red')
+ax2.tick_params(axis='y', labelcolor='red')
+
+# Add a title and show the plot
+plt.title('Mean and Variance Plot')
+fig.tight_layout()  # Adjust layout to prevent overlap
+
+# Add legends
+lines_1, labels_1 = ax1.get_legend_handles_labels()
+lines_2, labels_2 = ax2.get_legend_handles_labels()
+ax1.legend(lines_1 + lines_2, labels_1 + labels_2, loc='best')
+
+plt.show()
+```
+
+![](index_files/figure-commonmark/cell-7-output-1.png)
