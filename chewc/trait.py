@@ -4,6 +4,12 @@
 __all__ = ['select_qtl_loci', 'generate_marker_effects', 'calculate_genetic_variance', 'scale_marker_effects', 'TraitA']
 
 # %% ../nbs/02_trait.ipynb 4
+import torch
+import attr
+from typing import Tuple, Optional, List
+
+#| export
+
 from .core import *
 
 import torch
@@ -36,6 +42,7 @@ def select_qtl_loci(num_qtl_per_chromosome: int, genome:Genome) -> torch.Tensor:
     
     return torch.stack(qtl_indices)
 
+# %% ../nbs/02_trait.ipynb 7
 def generate_marker_effects(qtl_map: torch.Tensor, mean: float = 0.0, variance: float = 1.0) -> torch.Tensor:
     """
     Generates random marker effects for QTLs, drawn from a normal distribution.
@@ -65,6 +72,7 @@ def generate_marker_effects(qtl_map: torch.Tensor, mean: float = 0.0, variance: 
     effects[qtl_map] = qtl_effects
     
     return effects
+
 def calculate_genetic_variance(founder_pop: torch.Tensor, marker_effects: torch.Tensor, genome: Genome) -> float:
     """
     Calculates the additive genetic variance in the founder population.
@@ -112,11 +120,6 @@ def scale_marker_effects(marker_effects: torch.Tensor,
 #| hide
 
 
-
-# %% ../nbs/02_trait.ipynb 5
-import torch
-import attr
-from typing import Tuple, Optional, List
 
 @attr.s(auto_attribs=True)
 class TraitA:

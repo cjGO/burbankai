@@ -7,6 +7,7 @@ __all__ = ['Genome', 'Individual', 'Population', 'create_uniform_genetic_map', '
 # %% ../nbs/01_core.ipynb 4
 import attr
 import torch
+from fastcore.test import *
 from typing import List, Tuple, Union, Callable, Optional
 
 # %% ../nbs/01_core.ipynb 6
@@ -133,7 +134,7 @@ def create_random_genetic_map(number_chromosomes: int, loci_per_chromosome: int,
         genetic_map[chr_idx, 1:] = random_positions    
     return genetic_map
 
-# %% ../nbs/01_core.ipynb 12
+# %% ../nbs/01_core.ipynb 11
 def create_random_founder_pop(genome: Genome, n_founders: int) -> torch.Tensor:
     """
     Creates a tensor of random haplotypes for multiple founder individuals based on the provided genome.

@@ -45,7 +45,30 @@ n_founders = 50
 genetic_map = create_random_genetic_map(number_chromosomes,loci_per_chromosome)
 crop_genome = Genome(ploidy, number_chromosomes, loci_per_chromosome, genetic_map)
 founder_pop = create_random_founder_pop(crop_genome , n_founders)
+
+qtl_map = select_qtl_loci(5,crop_genome)
+add_fx = generate_marker_effects(qtl_map,0,1)
+# Add a trait
+trait_A = TraitA(
+                qtl_map,
+                add_fx,
+    genome=crop_genome, 
+                 founder_pop=founder_pop, 
+                 target_variance=1.0,        # Example: Target genetic variance of 1.0
+                 target_mean=10.0)           # Example: Target mean genetic value of 10.0
+
+# Now you can use trait_A to calculate genetic values, simulate phenotypes, etc.
+example_genotypes = create_random_founder_pop(crop_genome , 10)  # Example genotypes
+genetic_values = trait_A.calculate_genetic_value(example_genotypes)
+phenotypes = trait_A.setPheno(example_genotypes, h2=torch.tensor(0.5)) 
+print(genetic_values)
+print(phenotypes)
 ```
+
+    tensor([-3.9872, -2.6802, -3.2530, -2.8984, -2.7952, -1.7489, -2.8991, -2.1334,
+            -1.3709, -5.8642])
+    tensor([-2.4555, -2.0640, -2.5771, -2.7667, -2.7303, -1.9927, -0.9669, -3.4610,
+            -1.8930, -7.0445])
 
 ``` python
 qtl_map = select_qtl_loci(20, crop_genome)
@@ -113,5 +136,3 @@ ax1.legend(lines_1 + lines_2, labels_1 + labels_2, loc='best')
 
 plt.show()
 ```
-
-![](index_files/figure-commonmark/cell-7-output-1.png)
