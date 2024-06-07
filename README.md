@@ -45,18 +45,18 @@ n_founders = 50
 genetic_map = create_random_genetic_map(number_chromosomes,loci_per_chromosome)
 crop_genome = Genome(ploidy, number_chromosomes, loci_per_chromosome, genetic_map)
 founder_pop = create_random_founder_pop(crop_genome , n_founders)
+```
 
-qtl_map = select_qtl_loci(5,crop_genome)
-add_fx = generate_marker_effects(qtl_map,0,1)
+``` python
+qtl_map = select_qtl_loci(100,crop_genome)
+add_fx = generate_marker_effects(qtl_map,founder_pop,0,1)
 # Add a trait
 trait_A = TraitA(
                 qtl_map,
                 add_fx,
-    genome=crop_genome, 
-                 founder_pop=founder_pop, 
-                 target_variance=1.0,        # Example: Target genetic variance of 1.0
-                 target_mean=10.0)           # Example: Target mean genetic value of 10.0
-
+                genome=crop_genome, 
+                founder_pop=founder_pop, 
+)
 # Now you can use trait_A to calculate genetic values, simulate phenotypes, etc.
 example_genotypes = create_random_founder_pop(crop_genome , 10)  # Example genotypes
 genetic_values = trait_A.calculate_genetic_value(example_genotypes)
@@ -65,27 +65,20 @@ print(genetic_values)
 print(phenotypes)
 ```
 
-    tensor([11.7284, 11.6001,  9.7972,  8.4023,  9.8967, 10.0112,  7.7677, 10.5128,
-            10.1639, 11.9934])
-    tensor([10.5428, 11.0402,  9.3920,  7.7007,  9.8136,  9.1105,  7.1924,  9.3808,
-             9.9087, 12.1152])
-
-``` python
-qtl_map = select_qtl_loci(20, crop_genome)
-marker_fx = generate_marker_effects(qtl_map)
-
-founder_genetic_variance = calculate_genetic_variance(founder_pop,marker_fx,crop_genome)
-
-
-traita = TraitA(qtl_map, marker_fx,crop_genome, founder_pop,1.0,0.0)
-```
+    tensor([4.9217, 3.0676, 3.8802, 3.4133, 3.8190, 2.0305, 1.8424, 3.8215, 2.8152,
+            3.3127])
+    tensor([5.3106, 2.9171, 3.4742, 3.4601, 3.0819, 3.1966, 2.1117, 3.8294, 2.2255,
+            2.3835])
 
 ``` python
 # recurrent truncation selection
 
 means = []
 variances = []
-traita = TraitA(qtl_map, marker_fx,crop_genome, founder_pop,1.0,0.0)
+
+marker_fx = generate_marker_effects(qtl_map,founder_pop,0,1)
+
+traita = TraitA(qtl_map, marker_fx,crop_genome, founder_pop)
 
 
 tgv = traita.calculate_genetic_value(founder_pop)
