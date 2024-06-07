@@ -65,7 +65,7 @@ def random_crosses(population: Population,
         )
     return Population(individuals=offspring)
 
-# %% ../nbs/04_crossing.ipynb 8
+# %% ../nbs/04_crossing.ipynb 7
 def random_crosses(parent_pop:Population, n_crosses,genetic_map)-> Population:
     new_pop = []
     total_cross=n_crosses
@@ -79,6 +79,6 @@ def random_crosses(parent_pop:Population, n_crosses,genetic_map)-> Population:
     new_pop = torch.stack(new_pop)
     return new_pop
 
-# %% ../nbs/04_crossing.ipynb 10
+# %% ../nbs/04_crossing.ipynb 8
 def truncate_select(tgv):
     return torch.topk(tgv,20).indices

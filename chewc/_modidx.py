@@ -33,5 +33,4 @@ d = { 'settings': { 'branch': 'main',
                              'chewc.trait.TraitA.setPheno': ('trait.html#traita.setpheno', 'chewc/trait.py'),
                              'chewc.trait.calculate_genetic_variance': ('trait.html#calculate_genetic_variance', 'chewc/trait.py'),
                              'chewc.trait.generate_marker_effects': ('trait.html#generate_marker_effects', 'chewc/trait.py'),
-                             'chewc.trait.scale_marker_effects': ('trait.html#scale_marker_effects', 'chewc/trait.py'),
                              'chewc.trait.select_qtl_loci': ('trait.html#select_qtl_loci', 'chewc/trait.py')}}}

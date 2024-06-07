@@ -65,20 +65,19 @@ print(genetic_values)
 print(phenotypes)
 ```
 
-    tensor([-3.9872, -2.6802, -3.2530, -2.8984, -2.7952, -1.7489, -2.8991, -2.1334,
-            -1.3709, -5.8642])
-    tensor([-2.4555, -2.0640, -2.5771, -2.7667, -2.7303, -1.9927, -0.9669, -3.4610,
-            -1.8930, -7.0445])
+    tensor([11.7284, 11.6001,  9.7972,  8.4023,  9.8967, 10.0112,  7.7677, 10.5128,
+            10.1639, 11.9934])
+    tensor([10.5428, 11.0402,  9.3920,  7.7007,  9.8136,  9.1105,  7.1924,  9.3808,
+             9.9087, 12.1152])
 
 ``` python
 qtl_map = select_qtl_loci(20, crop_genome)
 marker_fx = generate_marker_effects(qtl_map)
 
 founder_genetic_variance = calculate_genetic_variance(founder_pop,marker_fx,crop_genome)
-scaled_marker_fx = scale_marker_effects(marker_fx, founder_genetic_variance, 0.5)
 
 
-traita = TraitA(qtl_map, scaled_marker_fx,crop_genome, founder_pop,1.0,0.0)
+traita = TraitA(qtl_map, marker_fx,crop_genome, founder_pop,1.0,0.0)
 ```
 
 ``` python
@@ -86,7 +85,7 @@ traita = TraitA(qtl_map, scaled_marker_fx,crop_genome, founder_pop,1.0,0.0)
 
 means = []
 variances = []
-traita = TraitA(qtl_map, scaled_marker_fx,crop_genome, founder_pop,1.0,0.0)
+traita = TraitA(qtl_map, marker_fx,crop_genome, founder_pop,1.0,0.0)
 
 
 tgv = traita.calculate_genetic_value(founder_pop)
@@ -136,3 +135,5 @@ ax1.legend(lines_1 + lines_2, labels_1 + labels_2, loc='best')
 
 plt.show()
 ```
+
+![](index_files/figure-commonmark/cell-7-output-1.png)
