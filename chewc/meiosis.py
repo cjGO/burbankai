@@ -25,31 +25,19 @@ def gamma_interference_model(length, rate, shape):
     return crossover_positions
 
 
-def simulate_meiosis(num_chromosomes, chromosome_length, crossover_rate, interference_strength):
+import torch
+
+def simulate_meiosis(num_chromosomes, map_length, num_individuals, num_crossovers):
     """
-    Simulate meiosis with crossover events and interference.
-    
-    Parameters:
-    num_chromosomes (int): Number of chromatids.
-    chromosome_length (float): Length of the chromosome.
-    crossover_rate (float): Rate of crossover events.
-    interference_strength (float): Strength of interference.
-    
-    Returns:
-    list of torch.Tensor: List of crossover positions for each chromatid.
+    This function simulates random crossover events across chromosomes.
     """
-    chromatid_crossovers = []
-    for _ in range(num_chromosomes):
-        crossovers = gamma_interference_model(chromosome_length, crossover_rate, interference_strength)
-        chromatid_crossovers.append(crossovers)
-    return chromatid_crossovers
+    return [torch.sort(torch.rand((num_individuals, num_crossovers)) * map_length, dim=-1)[0] for _ in range(num_chromosomes)]
 
 def simulate_gametes(genetic_map, parent_genome):
     """
     Simulate the formation of a single gamete given crossover positions, genetic map, and parent genomes.
 
     Parameters:
-    crossover_positions (list of torch.Tensor): List of positions of crossover events for each chromosome.
     genetic_map (list of torch.Tensor): List of positions of genetic markers on the chromosomes.
     parent_genome (torch.Tensor): Genomes of the parents. SHAPE:  (ploidy, num_chromosomes, num_loci)
 
@@ -58,21 +46,20 @@ def simulate_gametes(genetic_map, parent_genome):
     """
     ploidy, num_chromosomes, num_loci = parent_genome.shape
     gamete_genome = torch.zeros((ploidy // 2, num_chromosomes, num_loci), dtype=parent_genome.dtype)
-    crossover_positions = simulate_meiosis(num_chromosomes,100.0,1,1)
+    crossover_positions = simulate_meiosis(num_chromosomes, 100.0, 1, 1)
+
     for chrom in range(num_chromosomes):
-        parent_1 = parent_genome[0, chrom]
-        parent_2 = parent_genome[1, chrom]
-        
-        crossover_sites = crossover_positions[chrom]
-        chromatid = parent_1.clone()
-        
-        if len(crossover_sites) > 0:
-            crossover_index = 0
-            for i, marker_position in enumerate(genetic_map[chrom]):
-                if crossover_index < len(crossover_sites) and marker_position >= crossover_sites[crossover_index]:
-                    chromatid = parent_2 if chromatid is parent_1 else parent_1
-                    crossover_index += 1
-                gamete_genome[0, chrom, i] = chromatid[i]
+        # Create a crossover mask for each chromosome
+        crossover_mask = torch.zeros(num_loci, dtype=torch.bool)
+        crossover_sites = crossover_positions[chrom].flatten()
+        for position in crossover_sites:
+            # Find the nearest marker index for each crossover position
+            index = torch.argmin(torch.abs(genetic_map[chrom] - position))
+            crossover_mask[index:] = ~crossover_mask[index:]  # Flip values at and after the crossover index
+
+        # Use the mask to select genes from parent 1 or parent 2
+        gamete_genome[0, chrom] = torch.where(crossover_mask, parent_genome[1, chrom], parent_genome[0, chrom])
 
     return gamete_genome
+
 

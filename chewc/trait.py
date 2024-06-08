@@ -100,6 +100,7 @@ class TraitA:
     target_mean: float
     target_variance: float
     distribution: str ='normal'
+    intercept: None = 0
         
     def calculate_scaled_additive_dosages(self, genotypes: torch.Tensor) -> torch.Tensor:
         """
@@ -160,7 +161,10 @@ class TraitA:
         # pop.shape = [50,2,10,10]
         # self.scaled_effects.shape = [10,10]
         # output [50]
-        return torch.einsum('ijkl,kl->i', self.calculate_scaled_additive_dosages(pop.float()), self.scaled_effects)
+        if self.intercept:
+            return torch.einsum('ijkl,kl->i', self.calculate_scaled_additive_dosages(pop.float()), self.scaled_effects) + self.intercept
+        else:
+            return torch.einsum('ijkl,kl->i', self.calculate_scaled_additive_dosages(pop.float()), self.scaled_effects)
 
     def calculate_intercept(self):
         """
@@ -192,7 +196,7 @@ class TraitA:
         if h2 is None and varE is None:
             raise ValueError("Provide either h2 or varE.")
 
-        genetic_values = self.calculate_genetic_values(pop) + self.intercept
+        genetic_values = self.calculate_genetic_values(pop)
 
         if h2 is not None:
             # Calculate varE based on target heritability

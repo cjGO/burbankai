@@ -85,4 +85,4 @@ plt.tight_layout()  # Adjust layout to prevent overlap
 plt.show()
 ```
 
-    AttributeError: 'int' object has no attribute 'float'
+![](index_files/figure-commonmark/cell-4-output-1.png)
