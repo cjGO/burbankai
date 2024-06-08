@@ -241,6 +241,7 @@ def create_multiple_traits(sim_param: SimParam,
         List[TraitA]: A list of TraitA objects, each representing one of the created traits.
     """
     # Check input dimensions
+    n_traits = target_variances.shape[0]
     test_eq(target_means.shape, (n_traits,))
     test_eq(target_variances.shape, (n_traits,))
     test_eq(correlations.shape, (n_traits, n_traits))
