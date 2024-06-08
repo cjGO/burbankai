@@ -2,8 +2,8 @@ project:
   output-dir: _docs
 
 website:
-  title: "chew-c"
-  site-url: "https://cjgo.github.io/chew-c"
+  title: "ChewC"
+  site-url: "https://cjgo.github.io/ChewC"
   description: "Pytorch Breeding"
   repo-branch: main
-  repo-url: "https://github.com/cjgo/chew-c"
+  repo-url: "https://github.com/cjgo/ChewC"
