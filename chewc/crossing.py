@@ -9,16 +9,14 @@ from .meiosis import *
 from .trait import *
 import torch
 import random
-def make_DH(genetic_map, individual):
-    haploid_line = simulate_gametes(genetic_map, individual)
-    return gamete.repeat(2, 1, 1)
+def make_DH(sim_param, individual):
+    haploid_line = simulate_gametes(sim_param.genome.genetic_map, individual, sim_param.device)
+    return haploid_line.repeat(2, 1, 1)
 
-# %% ../nbs/04_crossing.ipynb 5
-def make_cross(genetic_map, mother, father):
-    egg = simulate_gametes(genetic_map, mother)  # Simulating gametes for the mother
-    pollen = simulate_gametes(genetic_map, father)  # Simulating gametes for the father
+def make_cross(sim_param, mother, father):
+    egg = simulate_gametes(sim_param.genome.genetic_map, mother)  # Simulating gametes for the mother
+    pollen = simulate_gametes(sim_param.genome.genetic_map, father)  # Simulating gametes for the father
     return torch.stack((egg, pollen), dim=0).squeeze(1)
 
-# %% ../nbs/04_crossing.ipynb 6
-def truncate_select(tgv):
-    return torch.topk(tgv,20).indices
+def truncate_select(tgv, device):
+    return torch.topk(tgv.to(device), 20).indices

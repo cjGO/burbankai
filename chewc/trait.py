@@ -11,7 +11,7 @@ from typing import Tuple, Optional, List
 from fastcore.test import *
 import matplotlib.pyplot as plt
 
-def select_qtl_loci(num_qtl_per_chromosome: int, genome:Genome) -> torch.Tensor:
+def select_qtl_loci(num_qtl_per_chromosome: int, genome: Genome, device: str = 'cpu') -> torch.Tensor:
     """
     Randomly selects loci to be QTLs on each chromosome.
 
@@ -19,6 +19,7 @@ def select_qtl_loci(num_qtl_per_chromosome: int, genome:Genome) -> torch.Tensor:
     ----
     num_qtl_per_chromosome (int): Number of QTLs to select per chromosome.
     genome (Genome): Genome object containing the chromosome structure.
+    device (str): Device to create the tensor on ('cpu' or 'cuda'). Defaults to 'cpu'.
 
     Returns:
     -------
@@ -29,14 +30,13 @@ def select_qtl_loci(num_qtl_per_chromosome: int, genome:Genome) -> torch.Tensor:
     assert num_qtl_per_chromosome <= genome.loci_per_chromosome, "too many qtls for this trait given your Genome object"
     assert num_qtl_per_chromosome > 0, "you need at least 1 QTL per chromosome"
     
-
     qtl_indices = []
     for i in range(genome.number_chromosomes):
         # Randomly sample indices for QTLs on the current chromosome
-        chromosome_indices = torch.randperm(genome.loci_per_chromosome)[:num_qtl_per_chromosome]
+        chromosome_indices = torch.randperm(genome.loci_per_chromosome, device=device)[:num_qtl_per_chromosome]
         
         # Create a boolean tensor for the current chromosome, marking QTL positions as True
-        chromosome_qtl_flags = torch.zeros(genome.loci_per_chromosome, dtype=torch.bool)
+        chromosome_qtl_flags = torch.zeros(genome.loci_per_chromosome, dtype=torch.bool, device=device)
         chromosome_qtl_flags[chromosome_indices] = True
         
         qtl_indices.append(chromosome_qtl_flags)
@@ -72,7 +72,9 @@ def calculate_genetic_variance(founder_pop: torch.Tensor, marker_effects: torch.
     return genetic_variance
 
 # %% ../nbs/02_trait.ipynb 5
-from typing import Optional
+import torch
+import attr
+import numpy as np
 
 @attr.s(auto_attribs=True)
 class TraitA:
@@ -84,26 +86,20 @@ class TraitA:
     qtl_map (torch.Tensor): A boolean tensor indicating which loci are QTLs. 
                            Shape: (number_chromosomes, loci_per_chromosome)
     genome (Genome): The genome object.
-    founder_pop (torch.Tensor): Tensor of founder haplotypes. 
-                                Shape: (n_founders, ploidy, number_chromosomes, loci_per_chromosome)
+    sim_param (SimParam): Simulation parameters including device.
     target_mean (float): The desired genetic mean for the trait.
     target_variance (float): The desired genetic variance for the trait.
-    additive_effects (torch.Tensor, optional): A tensor of additive effects for each QTL 
-                                           (if pre-generated). Defaults to None.
-    intercept (float): The intercept value, calculated during initialization.
-    
-    Methods:
-    -------
-
+    distribution (str): Distribution type for initial effects. Defaults to 'normal'.
+    intercept (float): The intercept value, calculated during initialization. Defaults to 0.
     """
 
     qtl_map: torch.Tensor 
     sim_param: SimParam
     target_mean: float
     target_variance: float
-    distribution: str ='normal'
-    intercept: None = 0
-        
+    distribution: str = 'normal'
+    intercept: float = 0.0
+
     def calculate_scaled_additive_dosages(self, genotypes: torch.Tensor) -> torch.Tensor:
         """
         Calculates the scaled additive genotype dosages.
@@ -122,14 +118,15 @@ class TraitA:
         """
         Sample initial values for the genetic effects based on the specified distribution.
         """
+        device = self.sim_param.device
         if self.distribution == 'normal':
             # Sample from a standard normal distribution
-            effects = torch.randn(self.sim_param.genome.genetic_map.shape)
+            effects = torch.randn(self.sim_param.genome.genetic_map.shape, device=device)
         elif self.distribution == 'gamma':
             # Sample from a gamma distribution with specified shape and scale=1
-            effects = torch.distributions.Gamma(self.shape, 1).sample((self.sim_param.genome.genetic_map.shape,))
+            effects = torch.distributions.Gamma(self.shape, 1).sample((self.sim_param.genome.genetic_map.shape,)).to(device)
             # Randomly assign a positive or negative sign
-            signs = torch.tensor(np.random.choice([-1, 1], self.sim_param.genome.genetic_map.shape))
+            signs = torch.tensor(np.random.choice([-1, 1], self.sim_param.genome.genetic_map.shape)).to(device)
             effects *= signs
         else:
             raise ValueError("Unsupported distribution type. Choose 'normal' or 'gamma'.")
@@ -147,12 +144,13 @@ class TraitA:
         Returns:
         torch.Tensor: Scaled marker effects.
         """
-        # Step 1: Calculate the genetic value for each individual using the initally sampled marker effects
-        genetic_values = (self.sim_param.founder_pop * self.initial_effects.unsqueeze(0).unsqueeze(0)).sum(dim=[1,2, 3])
+        device = self.sim_param.device
+        # Step 1: Calculate the genetic value for each individual using the initially sampled marker effects
+        genetic_values = (self.sim_param.founder_pop * self.initial_effects.unsqueeze(0).unsqueeze(0)).sum(dim=[1, 2, 3])
         # Step 2: Calculate the initial genetic variance
         initial_variance = genetic_values.var(dim=0)
         # Step 3: Calculate scaling constant and scale the effects
-        scaling_factor = torch.sqrt(self.target_variance / initial_variance)
+        scaling_factor = torch.sqrt(self.target_variance / initial_variance).to(device)
         scaled_effects = self.initial_effects * scaling_factor
         self.scaled_effects = scaled_effects
 
@@ -160,9 +158,6 @@ class TraitA:
         """
         Calculates the genetic value for each individual in a pop [ind,ploidy,chr,loci]
         """
-        # pop.shape = [50,2,10,10]
-        # self.scaled_effects.shape = [10,10]
-        # output [50]
         if self.intercept:
             return torch.einsum('ijkl,kl->i', self.calculate_scaled_additive_dosages(pop.float()), self.scaled_effects) + self.intercept
         else:
@@ -175,13 +170,12 @@ class TraitA:
         current_mean = self.calculate_genetic_values(self.sim_param.founder_pop).mean()
         self.intercept = self.target_mean - current_mean
         
-
     def phenotype(self, pop, h2=None, varE=None, reps=1):
         """
         Generate phenotypes for the individuals in the population.
 
         Args:
-        pop (Pop): The population object.
+        pop (torch.Tensor): The population tensor.
         h2 (float, optional): Target narrow-sense heritability. Defaults to None.
         varE (float, optional): Target environmental variance. Defaults to None.
         reps (int, optional): Number of repetitions for averaging. Defaults to 1.
@@ -193,7 +187,9 @@ class TraitA:
         Raises:
         ValueError: If both h2 and varE are provided or neither are provided.
         """
-
+        device = self.sim_param.device
+        pop = pop.to(device)
+        
         if h2 is not None and varE is not None:
             raise ValueError("Provide either h2 or varE, not both.")
         if h2 is None and varE is None:
@@ -207,18 +203,20 @@ class TraitA:
             varE = (varG / h2) - varG  
 
         # Generate phenotypes for each repetition
-        phenotypes = torch.zeros(len(pop))
+        phenotypes = torch.zeros(len(pop), device=device)
         for _ in range(reps):
-            error = torch.randn(len(pop)) * torch.sqrt(varE)
+            error = torch.randn(len(pop), device=device) * torch.sqrt(varE)
             phenotypes += genetic_values + error
 
         # Average phenotypes across repetitions
         phenotypes /= reps
 
         return phenotypes
-    
+
 
 # %% ../nbs/02_trait.ipynb 6
+from typing import List
+
 def create_multiple_traits(sim_param: SimParam, 
                            n_traits: int,
                            target_means: torch.Tensor,
@@ -244,6 +242,8 @@ def create_multiple_traits(sim_param: SimParam,
     Returns:
         List[TraitA]: A list of TraitA objects, each representing one of the created traits.
     """
+    device = sim_param.device
+    
     # Check input dimensions
     n_traits = target_variances.shape[0]
     test_eq(target_means.shape, (n_traits,))
@@ -251,13 +251,13 @@ def create_multiple_traits(sim_param: SimParam,
     test_eq(correlations.shape, (n_traits, n_traits))
     
     # Sample shared QTL positions
-    qtl_map = select_qtl_loci(num_qtl_per_chromosome, sim_param.genome)
+    qtl_map = select_qtl_loci(num_qtl_per_chromosome, sim_param.genome).to(device)
     
     # Generate correlated effects 
     if distribution == 'normal':
         # Cholesky decomposition for correlated normal variables
-        L = torch.linalg.cholesky(correlations)
-        uncorrelated_effects = torch.randn((sim_param.genome.number_chromosomes, sim_param.genome.loci_per_chromosome, n_traits))
+        L = torch.linalg.cholesky(correlations).to(device)
+        uncorrelated_effects = torch.randn((sim_param.genome.number_chromosomes, sim_param.genome.loci_per_chromosome, n_traits), device=device)
         correlated_effects = torch.matmul(uncorrelated_effects, L.T)
         
     elif distribution == 'gamma':

@@ -47,16 +47,16 @@ crop_genome = Genome(ploidy, number_chromosomes, loci_per_chromosome, genetic_ma
 
 n_founders = 500
 founder_pop = create_random_founder_pop(crop_genome , n_founders)
-simparam = SimParam
-simparam.founder_pop = founder_pop
-simparam.genome = crop_genome
+sim_param = SimParam
+sim_param.founder_pop = founder_pop
+sim_param.genome = crop_genome
 
 
 #add a single additive trait
 qtl_loci = 20
-qtl_map = select_qtl_loci(qtl_loci,simparam.genome)
+qtl_map = select_qtl_loci(qtl_loci,sim_param.genome)
 
-ta = TraitA(qtl_map,simparam,0, 1)
+ta = TraitA(qtl_map,sim_param,0, 1)
 ta.sample_initial_effects()
 ta.scale_genetic_effects()
 ta.calculate_intercept()
@@ -65,34 +65,38 @@ ta.calculate_intercept()
 
 
 
-years = 50
-current_pop = founder_pop
+
+# Ensure sim_param.device is defined and correct
+device = sim_param.device
+
+years = 20
+current_pop = founder_pop.to(device)
 pmean = []
 pvar = []
-for i in range(years):
-    #phenotype current pop
-    TOPK = 2
-    new_pop=[]
-    pheno = ta.phenotype(current_pop,h2=.14)
-    topk = torch.topk(pheno,TOPK).indices
 
-    for i in range(200):
-        sampled_indices = torch.multinomial(torch.ones(topk.size(0)), 2, replacement=False)
+for _ in range(years):
+    # phenotype current pop
+    TOPK = 10
+    new_pop = []
+    pheno = ta.phenotype(current_pop, h2=0.14).to(device)
+    topk = torch.topk(pheno, TOPK).indices.to(device)
+
+    for _ in range(200):
+        sampled_indices = torch.multinomial(torch.ones(topk.size(0), device=device), 2, replacement=False)
         sampled_parents = topk[sampled_indices]
-        m,f = current_pop[sampled_parents[0]], current_pop[sampled_parents[1]]
-        new_pop.append(make_cross(simparam.genome.genetic_map, m, f))
+        m, f = current_pop[sampled_parents[0]], current_pop[sampled_parents[1]]
+        new_pop.append(make_cross(sim_param, m, f).to(device))
     
-    current_pop = torch.stack(new_pop)
-    pmean.append(ta.calculate_genetic_values(current_pop).mean())
-    pvar.append(ta.calculate_genetic_values(current_pop).var())
+    current_pop = torch.stack(new_pop).to(device)
+    pmean.append(ta.calculate_genetic_values(current_pop).mean().item())
+    pvar.append(ta.calculate_genetic_values(current_pop).var().item())
 
+pmean_normalized = torch.tensor(pmean, device=device) / max(pmean)
+pvar_normalized = torch.tensor(pvar, device=device) / max(pvar)
 
-pmean_normalized = torch.tensor(pmean) / max(pmean)
-
-pvar_normalized = torch.tensor(pvar) / max(pvar)
-
-plt.scatter(range(len(pmean_normalized)), pmean_normalized)
-plt.scatter(range(len(pvar_normalized)), pvar_normalized)
+plt.scatter(range(len(pmean_normalized)), pmean_normalized.cpu())
+plt.scatter(range(len(pvar_normalized)), pvar_normalized.cpu())
+plt.show()
 ```
 
 ![](index_files/figure-commonmark/cell-4-output-1.png)

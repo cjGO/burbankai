@@ -105,6 +105,7 @@ class SimParam:
     founder_pop = None
     genome = None
     traits = None
+    device = 'cpu'
 
 # %% ../nbs/01_core.ipynb 12
 def create_uniform_genetic_map(number_chromosomes: int, loci_per_chromosome: int, chromosome_length: float = 100.0) -> torch.Tensor:
@@ -122,7 +123,7 @@ def create_uniform_genetic_map(number_chromosomes: int, loci_per_chromosome: int
     return torch.arange(0, chromosome_length, chromosome_length / loci_per_chromosome).repeat(number_chromosomes, 1)
 
 
-def create_random_genetic_map(number_chromosomes: int, loci_per_chromosome: int, chromosome_length: float = 100.0) -> torch.Tensor:
+def create_random_genetic_map(number_chromosomes: int, loci_per_chromosome: int, chromosome_length: float = 100.0, device: str = 'cpu') -> torch.Tensor:
     """
     Creates a random genetic map with loci positions that gradually increase randomly on each chromosome.
 
@@ -130,29 +131,31 @@ def create_random_genetic_map(number_chromosomes: int, loci_per_chromosome: int,
         number_chromosomes (int): Number of chromosomes.
         loci_per_chromosome (int): Number of loci per chromosome.
         chromosome_length (float): Maximum genetic length of each chromosome in centimorgans (cM). Defaults to 100.0 cM.
+        device (str): Device to create the tensor on ('cpu' or 'cuda'). Defaults to 'cpu'.
 
     Returns:
         torch.Tensor: 2D tensor representing the genetic map (shape: (number_chromosomes, loci_per_chromosome)).
     """
-    genetic_map = torch.zeros((number_chromosomes, loci_per_chromosome))
+    genetic_map = torch.zeros((number_chromosomes, loci_per_chromosome), device=device)
 
     for chr_idx in range(number_chromosomes):
-        random_positions = torch.sort(torch.rand(loci_per_chromosome-1) * chromosome_length).values
+        random_positions = torch.sort(torch.rand(loci_per_chromosome-1, device=device) * chromosome_length).values
         genetic_map[chr_idx, 1:] = random_positions    
     return genetic_map
 
-# %% ../nbs/01_core.ipynb 13
-def create_random_founder_pop(genome: Genome, n_founders: int) -> torch.Tensor:
+
+def create_random_founder_pop(genome: Genome, n_founders: int, device: str = 'cpu') -> torch.Tensor:
     """
     Creates a tensor of random haplotypes for multiple founder individuals based on the provided genome.
 
     Args:
         genome (Genome): The genome defining the structure of the haplotypes.
         n_founders (int): The number of founder individuals to create haplotypes for.
+        device (str): Device to create the tensor on ('cpu' or 'cuda'). Defaults to 'cpu'.
 
     Returns:
         torch.Tensor: A tensor of random 0's and 1's representing haplotypes.
                          Shape: (n_founders, ploidy, number_chromosomes, loci_per_chromosome)
     """
-    return torch.randint(0, 2, (n_founders, genome.ploidy, genome.number_chromosomes, genome.loci_per_chromosome))
+    return torch.randint(0, 2, (n_founders, genome.ploidy, genome.number_chromosomes, genome.loci_per_chromosome), device=device)
 
