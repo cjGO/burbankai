@@ -176,7 +176,7 @@ class TraitA:
         self.intercept = self.target_mean - current_mean
         
 
-    def phenotype(self, pop, h2=None, varE=None):
+    def phenotype(self, pop, h2=None, varE=None, reps=1):
         """
         Generate phenotypes for the individuals in the population.
 
@@ -184,10 +184,11 @@ class TraitA:
         pop (Pop): The population object.
         h2 (float, optional): Target narrow-sense heritability. Defaults to None.
         varE (float, optional): Target environmental variance. Defaults to None.
+        reps (int, optional): Number of repetitions for averaging. Defaults to 1.
 
         Returns:
-        torch.Tensor: A tensor of phenotype values for each individual.
-                       Shape: (n_individuals,)
+        torch.Tensor: A tensor of average phenotype values for each individual.
+                      Shape: (n_individuals,)
 
         Raises:
         ValueError: If both h2 and varE are provided or neither are provided.
@@ -204,13 +205,16 @@ class TraitA:
             # Calculate varE based on target heritability
             varG = genetic_values.var()
             varE = (varG / h2) - varG  
-        
-        # Generate environmental error
-        error = torch.randn(len(pop)) * torch.sqrt(varE)
 
-        # Calculate phenotypes
-        phenotypes = genetic_values + error
-        
+        # Generate phenotypes for each repetition
+        phenotypes = torch.zeros(len(pop))
+        for _ in range(reps):
+            error = torch.randn(len(pop)) * torch.sqrt(varE)
+            phenotypes += genetic_values + error
+
+        # Average phenotypes across repetitions
+        phenotypes /= reps
+
         return phenotypes
     
 

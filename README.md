@@ -37,6 +37,8 @@ pip install chewc
 First, define the genome of your crop
 
 ``` python
+import random
+
 ploidy = 2
 number_chromosomes = 10
 loci_per_chromosome = 100
@@ -51,7 +53,7 @@ simparam.genome = crop_genome
 
 
 #add a single additive trait
-qtl_loci = 100
+qtl_loci = 20
 qtl_map = select_qtl_loci(qtl_loci,simparam.genome)
 
 ta = TraitA(qtl_map,simparam,0, 1)
@@ -59,30 +61,38 @@ ta.sample_initial_effects()
 ta.scale_genetic_effects()
 ta.calculate_intercept()
 
-# Create a 2x2 grid of plots
-fig, axs = plt.subplots(2, 2, figsize=(10, 10))  # Adjust figsize as needed
 
-# Plot 1: Scaled Effects Histogram
-axs[0, 0].hist(ta.scaled_effects.flatten())
-axs[0, 0].set_title('Marker Effects')
 
-# Plot 2: True Genetic Values Histogram
-genetic_values = ta.calculate_genetic_values(simparam.founder_pop)
-axs[0, 1].hist(genetic_values)
-axs[0, 1].set_title('True Genetic Values')
 
-# Plot 3: Phenotype Histogram
-phenotypes = ta.phenotype(simparam.founder_pop, h2=0.5)  # Assuming 'h2' is a parameter for heritability in the phenotype method
-axs[1, 0].hist(phenotypes)
-axs[1, 0].set_title('Phenotype')
 
-# Plot 4: Scatter Plot of Genetic Values vs Phenotypes
-axs[1, 1].scatter(genetic_values, phenotypes)
-axs[1, 1].set_title('Genetic Values vs Phenotype')
+years = 50
+current_pop = founder_pop
+pmean = []
+pvar = []
+for i in range(years):
+    #phenotype current pop
+    TOPK = 2
+    new_pop=[]
+    pheno = ta.phenotype(current_pop,h2=.14)
+    topk = torch.topk(pheno,TOPK).indices
 
-# Display the plots
-plt.tight_layout()  # Adjust layout to prevent overlap
-plt.show()
+    for i in range(200):
+        sampled_indices = torch.multinomial(torch.ones(topk.size(0)), 2, replacement=False)
+        sampled_parents = topk[sampled_indices]
+        m,f = current_pop[sampled_parents[0]], current_pop[sampled_parents[1]]
+        new_pop.append(make_cross(simparam.genome.genetic_map, m, f))
+    
+    current_pop = torch.stack(new_pop)
+    pmean.append(ta.calculate_genetic_values(current_pop).mean())
+    pvar.append(ta.calculate_genetic_values(current_pop).var())
+
+
+pmean_normalized = torch.tensor(pmean) / max(pmean)
+
+pvar_normalized = torch.tensor(pvar) / max(pvar)
+
+plt.scatter(range(len(pmean_normalized)), pmean_normalized)
+plt.scatter(range(len(pvar_normalized)), pvar_normalized)
 ```
 
 ![](index_files/figure-commonmark/cell-4-output-1.png)
