@@ -159,6 +159,18 @@ class Population:
                           (population_size, ploidy, n_chromosomes, n_loci_per_chromosome).
         """
         return torch.stack([individual.haplotypes for individual in self.individuals])
+    
+    def get_dosages(self) -> torch.Tensor:
+        """
+        Calculates the allele dosage for each locus in the population by summing over the ploidy.
+
+        Returns:
+            torch.Tensor: Allele dosage tensor with shape 
+                          (population_size, n_chromosomes, n_loci_per_chromosome).
+        """
+        genotypes = self.get_genotypes()
+        allele_dosage = genotypes.sum(dim=1) # Sum over the ploidy dimension
+        return allele_dosage
 
     def add_individual(self, individual: Individual):
         """Adds an individual to the population."""
@@ -194,19 +206,19 @@ class PopulationDataset(Dataset):
         return self.population.size()
 
     def __getitem__(self, idx):
-        individual = self.population.individuals[idx]
-        genotype = individual.haplotypes
+        genotype = self.population.individuals[idx].haplotypes
         if self.transform:
-            genotype = self.transform(genotype) 
+            genotype = self.transform(genotype)
         return genotype
 
-def create_population_dataloader(population: Population, batch_size: int, shuffle=True, num_workers=0):
+def create_population_dataloader(population: Population, batch_size: int, shuffle=True, num_workers=0, pin_memory=True):
     """Creates a DataLoader for the given Population."""
     dataset = PopulationDataset(population)
     dataloader = DataLoader(
         dataset, 
         batch_size=batch_size, 
         shuffle=shuffle, 
-        num_workers=num_workers
+        num_workers=num_workers,
+        pin_memory=pin_memory  # Pin memory for faster transfer to GPU
     )
     return dataloader
