@@ -36,6 +36,8 @@ class Genome:
 
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         self.genetic_map = None 
+        
+        self.create_genetic_map()
 
     def shape(self) -> Tuple[int, int, int]:
         """Returns the shape of the genome (ploidy, chromosomes, loci)."""
@@ -247,7 +249,7 @@ class Population:
         allele_frequencies = self.calculate_allele_frequencies()
         return 1.0 - (allele_frequencies**2 + (1 - allele_frequencies)**2) 
 
-# %% ../nbs/01_core.ipynb 7
+# %% ../nbs/01_core.ipynb 9
 from torch.utils.data import Dataset, DataLoader
 
 class PopulationDataset(Dataset):

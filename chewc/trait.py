@@ -45,16 +45,8 @@ def select_qtl_loci(num_qtl_per_chromosome: int, genome: Genome) -> torch.Tensor
     
     return torch.stack(qtl_indices)
 
-# %% ../nbs/02_trait.ipynb 4
 class TraitA(nn.Module):
-    """
-    Represents a trait with only additive genetic effects.
 
-    Args:
-        genome (Genome): The genome object.
-        target_mean (float): The desired genetic mean for the trait in the founder population.
-        target_variance (float): The desired genetic variance for the trait in the founder population.
-    """
     
     def __init__(self, genome: Genome, founder_population: Population, target_mean: float, target_variance: float):
         super().__init__()
@@ -71,29 +63,15 @@ class TraitA(nn.Module):
             self.scale_effects(founder_population)
 
     def _calculate_scaled_additive_dosages(self, genotypes: torch.Tensor) -> torch.Tensor:
-        """
-        Calculates the scaled additive genotype dosages.
 
-        Args:
-            genotypes (torch.Tensor): A tensor representing the genotypes of individuals.
-                                     Shape: (n_individuals, ploidy, n_chromosomes, n_loci_per_chromosome).
-
-        Returns:
-            torch.Tensor: A tensor of scaled additive dosages. 
-                         Shape: (n_individuals, ploidy, n_chromosomes, n_loci_per_chromosome).
-        """
         return (genotypes - self.genome.ploidy / 2) * (2 / self.genome.ploidy)
 
     def sample_initial_effects(self):
-        """
-        Sample initial values for the genetic effects from a standard normal distribution.
-        """
+
         self.effects = torch.randn((self.genome.n_chromosomes, self.genome.n_loci_per_chromosome), device=self.genome.device) 
 
     def scale_effects(self, founder_pop: Population):
-        """
-        Scale the marker effects to achieve the specified genetic variance in the founder population.
-        """
+
         founder_genotypes = founder_pop.get_dosages().float().to(self.genome.device)  # Move to GPU
         scaled_dosages = self._calculate_scaled_additive_dosages(founder_genotypes)
         # Apply QTL map
@@ -110,16 +88,7 @@ class TraitA(nn.Module):
 #         self.intercept = self.target_mean - current_mean
 
     def forward(self, genotypes: torch.Tensor) -> torch.Tensor:
-        """
-        Calculate the genetic value of individuals
 
-        Args:
-            genotypes (torch.Tensor): A tensor representing the genotypes of individuals.
-                                     Shape: (n_individuals, ploidy, n_chromosomes, n_loci_per_chromosome).
-
-        Returns:
-            torch.Tensor: Genetic values of individuals. Shape: (n_individuals)
-        """
         genotypes = genotypes.to(self.genome.device) # Ensure genotypes are on the same device as effects
         scaled_dosages = self._calculate_scaled_additive_dosages(genotypes)
         # Apply QTL map
