@@ -33,4 +33,6 @@ d = { 'settings': { 'branch': 'main',
                             'chewc.core.PopulationDataset.__init__': ('core.html#populationdataset.__init__', 'chewc/core.py'),
                             'chewc.core.PopulationDataset.__len__': ('core.html#populationdataset.__len__', 'chewc/core.py'),
                             'chewc.core.create_population_dataloader': ('core.html#create_population_dataloader', 'chewc/core.py')},
+            'chewc.meiosis': { 'chewc.meiosis.gamma_interference_model': ('meiosis.html#gamma_interference_model', 'chewc/meiosis.py'),
+                               'chewc.meiosis.simulate_gametes': ('meiosis.html#simulate_gametes', 'chewc/meiosis.py')},
             'chewc.trait': {'chewc.trait.select_qtl_loci': ('trait.html#select_qtl_loci', 'chewc/trait.py')}}}
