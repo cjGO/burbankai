@@ -6,6 +6,8 @@ __all__ = ['poisson_crossing_over', 'simulate_gametes']
 # %% ../nbs/03_meiosis.ipynb 3
 import torch
 from .core import *
+from .trait import *
+
 def poisson_crossing_over(chrom_lengths: torch.Tensor) -> list:
     """
     Generate crossing over locations for each chromosome given its length.

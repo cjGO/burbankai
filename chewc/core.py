@@ -91,62 +91,6 @@ class Individual:
                  phenotypes: Optional[torch.Tensor] = None):
         
         self.genome: Genome = genome
-        self.haplotypes: torch.Tensor = haplotypes.to(genome.device)
-        self.id: Optional[str] = id
-        self.mother_id: Optional[str] = mother_id
-        self.father_id: Optional[str] = father_id
-        self.breeding_values: Optional[torch.Tensor] = breeding_values 
-        self.phenotypes: Optional[torch.Tensor] = phenotypes 
-
-    @classmethod
-    def create_random_individual(cls, genome: Genome, id: Optional[str] = None):
-        """
-        Creates a random individual with the specified genome.
-
-        Args:
-            genome (Genome): The genome object.
-            id (Optional[str]): Unique identifier for the individual.
-
-        Returns:
-            Individual: A new Individual object with random haplotypes.
-        """
-        haplotypes = torch.randint(0, 2, genome.shape(), device=genome.device)
-        return cls(genome=genome, haplotypes=haplotypes, id=id)
-
-    def to(self, device: torch.device):
-        """Moves the individual's data to the specified device."""
-        self.haplotypes = self.haplotypes.to(device)
-        if self.breeding_values is not None:
-            self.breeding_values = self.breeding_values.to(device)
-        if self.phenotypes is not None:
-            self.phenotypes = self.phenotypes.to(device)
-        return self
-
-class Individual:
-    """
-    Represents an individual in the breeding simulation.
-
-    Args:
-        genome (Genome): Reference to the shared Genome object.
-        haplotypes (torch.Tensor): Tensor representing the individual's haplotypes. 
-                                    Shape: (ploidy, n_chromosomes, n_loci_per_chromosome).
-        id (Optional[str]): Unique identifier. Defaults to None.
-        mother_id (Optional[str]): Mother's identifier. Defaults to None.
-        father_id (Optional[str]): Father's identifier. Defaults to None.
-        breeding_values (Optional[torch.Tensor]): Breeding values for traits. Shape: (n_traits,). Defaults to None.
-        phenotypes (Optional[torch.Tensor]): Phenotype for traits. Shape: (n_traits,). Defaults to None.
-    """
-    
-    def __init__(self, 
-                 genome: Genome, 
-                 haplotypes: torch.Tensor, 
-                 id: Optional[str] = None, 
-                 mother_id: Optional[str] = None, 
-                 father_id: Optional[str] = None, 
-                 breeding_values: Optional[torch.Tensor] = None, 
-                 phenotypes: Optional[torch.Tensor] = None):
-        
-        self.genome: Genome = genome
         self.haplotypes: torch.Tensor = haplotypes.to('cpu')
         self.id: Optional[str] = id
         self.mother_id: Optional[str] = mother_id

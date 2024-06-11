@@ -7,7 +7,10 @@ __all__ = ['random_crosses', 'double_haploid']
 from .core import *
 from .trait import *
 from .meiosis import *
+
 import torch
+
+# %% ../nbs/04_cross.ipynb 4
 def random_crosses( genome: Genome, parent_haplotypes: torch.Tensor, n_crosses: int) -> torch.Tensor:
     """
     Generate random crosses from a set of parent haplotypes.
@@ -24,6 +27,8 @@ def random_crosses( genome: Genome, parent_haplotypes: torch.Tensor, n_crosses: 
         torch.Tensor: Haplotypes of the progeny. 
                       Shape: (n_crosses, ploidy, chr, loci)
     """
+    
+    assert len(parent_haplotypes.shape) == 4, f"Your input was {parent_haplotypes.shape} when it should be (#parents,ploidy,#chr,#loci)"
     device = genome.device
     n_parents = parent_haplotypes.shape[0]
 
@@ -44,8 +49,7 @@ def random_crosses( genome: Genome, parent_haplotypes: torch.Tensor, n_crosses: 
 
     return progeny_haplotypes
 
-
-# %% ../nbs/04_cross.ipynb 6
+# %% ../nbs/04_cross.ipynb 8
 def double_haploid(genome: Genome, parent_haplotypes: torch.Tensor) -> torch.Tensor:
     """
     Generate doubled haploid individuals from a set of parent haplotypes.

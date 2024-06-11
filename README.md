@@ -38,7 +38,7 @@ import torch
 ploidy = 2
 n_chr = 10
 n_loci = 100
-n_Ind = 333
+n_Ind = 3330
 g = Genome(ploidy, n_chr, n_loci)
 population = Population()
 population.create_random_founder_population(g, n_founders=n_Ind)
@@ -50,8 +50,8 @@ init_pop = population.get_dosages().float()  # gets allele dosage for calculatin
 target_means = torch.tensor([0, 5])
 target_vars = torch.tensor([1, 1])  # Note: I'm assuming you want a variance of 1 for the second trait
 correlation_values = [
-        [1.0, 0.2],
-        [0.2, 1.0],
+        [1.0, 0.8],
+        [0.8, 1.0],
     ]
 
 
@@ -60,4 +60,29 @@ correlated_traits = corr_traits(g, init_pop, target_means, target_vars, correlat
 
     Created genetic map
 
-    NameError: name 'init_pop' is not defined
+``` python
+current_pop = init_pop
+```
+
+``` python
+new_parents = population.get_genotypes().float()
+means = []
+for i in range(10):
+    curr_pop = random_crosses(g, new_parents, 200)
+    new_pheno = correlated_traits[0](curr_pop.sum(dim=1))
+    means.append(new_pheno.mean())
+    topk = torch.topk(new_pheno,10) # select  top 50 parents
+    new_parents = curr_pop.float()[topk.indices]
+```
+
+``` python
+plt.scatter(range(len(means)),means)
+```
+
+![](index_files/figure-commonmark/cell-6-output-1.png)
+
+``` python
+plt.scatter(correlated_traits[0](init_pop,h2=.5),correlated_traits[1](init_pop,h2=1))
+```
+
+![](index_files/figure-commonmark/cell-8-output-1.png)
