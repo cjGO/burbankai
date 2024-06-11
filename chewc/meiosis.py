@@ -28,6 +28,7 @@ def poisson_crossing_over(chrom_lengths: torch.Tensor) -> list:
     
     return crossing_over_locations
 
+# %% ../nbs/03_meiosis.ipynb 5
 def simulate_gametes(genome, parent_genomes, rate =1 , shape=1):
     """
     Simulate the formation of gametes for multiple parents using vectorized operations.
@@ -50,6 +51,9 @@ def simulate_gametes(genome, parent_genomes, rate =1 , shape=1):
     # Simulate crossover positions for all chromosomes at once
 #     all_crossovers = gamma_interference_model(chromosome_lengths, rate, shape, device)
     all_crossovers = poisson_crossing_over(chromosome_lengths)
+    
+    
+    
     # Initialize gametes tensor
     gametes = torch.zeros(num_individuals, ploidy // 2, num_chromosomes, num_loci, device=device, dtype=parent_genomes.dtype)
     
@@ -74,4 +78,3 @@ def simulate_gametes(genome, parent_genomes, rate =1 , shape=1):
     return gametes
 
 # Define your Genome class or struct here if needed, ensuring it includes 'device' and 'genetic_map'
-
