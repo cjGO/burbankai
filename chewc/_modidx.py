@@ -33,11 +33,4 @@ d = { 'settings': { 'branch': 'main',
                             'chewc.core.PopulationDataset.__init__': ('core.html#populationdataset.__init__', 'chewc/core.py'),
                             'chewc.core.PopulationDataset.__len__': ('core.html#populationdataset.__len__', 'chewc/core.py'),
                             'chewc.core.create_population_dataloader': ('core.html#create_population_dataloader', 'chewc/core.py')},
-            'chewc.trait': { 'chewc.trait.TraitA': ('trait.html#traita', 'chewc/trait.py'),
-                             'chewc.trait.TraitA.__init__': ('trait.html#traita.__init__', 'chewc/trait.py'),
-                             'chewc.trait.TraitA._calculate_scaled_additive_dosages': ( 'trait.html#traita._calculate_scaled_additive_dosages',
-                                                                                        'chewc/trait.py'),
-                             'chewc.trait.TraitA.forward': ('trait.html#traita.forward', 'chewc/trait.py'),
-                             'chewc.trait.TraitA.sample_initial_effects': ('trait.html#traita.sample_initial_effects', 'chewc/trait.py'),
-                             'chewc.trait.TraitA.scale_effects': ('trait.html#traita.scale_effects', 'chewc/trait.py'),
-                             'chewc.trait.select_qtl_loci': ('trait.html#select_qtl_loci', 'chewc/trait.py')}}}
+            'chewc.trait': {'chewc.trait.select_qtl_loci': ('trait.html#select_qtl_loci', 'chewc/trait.py')}}}
