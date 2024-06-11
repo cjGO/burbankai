@@ -33,64 +33,31 @@ pip install chewc
 First, define the genome of your crop
 
 ``` python
-# import random
+import torch
 
-# ploidy = 2
-# number_chromosomes = 10
-# loci_per_chromosome = 100
-# genetic_map = create_random_genetic_map(number_chromosomes,loci_per_chromosome)
-# crop_genome = Genome(ploidy, number_chromosomes, loci_per_chromosome, genetic_map)
+ploidy = 2
+n_chr = 10
+n_loci = 100
+n_Ind = 333
+g = Genome(ploidy, n_chr, n_loci)
+population = Population()
+population.create_random_founder_population(g, n_founders=n_Ind)
+init_pop = population.get_dosages().float()  # gets allele dosage for calculating trait values
 
-# n_founders = 500
-# founder_pop = create_random_founder_pop(crop_genome , n_founders)
-# sim_param = SimParam
-# sim_param.founder_pop = founder_pop
-# sim_param.genome = crop_genome
-
-
-# #add a single additive trait
-# qtl_loci = 20
-# qtl_map = select_qtl_loci(qtl_loci,sim_param.genome)
-
-# ta = TraitA(qtl_map,sim_param,0, 1)
-# ta.sample_initial_effects()
-# ta.scale_genetic_effects()
-# ta.calculate_intercept()
+# multi_traits
 
 
+target_means = torch.tensor([0, 5])
+target_vars = torch.tensor([1, 1])  # Note: I'm assuming you want a variance of 1 for the second trait
+correlation_values = [
+        [1.0, 0.2],
+        [0.2, 1.0],
+    ]
 
 
-
-
-# # Ensure sim_param.device is defined and correct
-# device = sim_param.device
-
-# years = 20
-# current_pop = founder_pop.to(device)
-# pmean = []
-# pvar = []
-
-# for _ in range(years):
-#     # phenotype current pop
-#     TOPK = 10
-#     new_pop = []
-#     pheno = ta.phenotype(current_pop, h2=0.14).to(device)
-#     topk = torch.topk(pheno, TOPK).indices.to(device)
-
-#     for _ in range(200):
-#         sampled_indices = torch.multinomial(torch.ones(topk.size(0), device=device), 2, replacement=False)
-#         sampled_parents = topk[sampled_indices]
-#         m, f = current_pop[sampled_parents[0]], current_pop[sampled_parents[1]]
-#         new_pop.append(make_cross(sim_param, m, f).to(device))
-    
-#     current_pop = torch.stack(new_pop).to(device)
-#     pmean.append(ta.calculate_genetic_values(current_pop).mean().item())
-#     pvar.append(ta.calculate_genetic_values(current_pop).var().item())
-
-# pmean_normalized = torch.tensor(pmean, device=device) / max(pmean)
-# pvar_normalized = torch.tensor(pvar, device=device) / max(pvar)
-
-# plt.scatter(range(len(pmean_normalized)), pmean_normalized.cpu())
-# plt.scatter(range(len(pvar_normalized)), pvar_normalized.cpu())
-# plt.show()
+correlated_traits = corr_traits(g, init_pop, target_means, target_vars, correlation_values)
 ```
+
+    Created genetic map
+
+    NameError: name 'init_pop' is not defined
