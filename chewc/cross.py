@@ -50,22 +50,33 @@ def x_random( genome: Genome, parent_haplotypes: torch.Tensor, n_crosses: int) -
     return progeny_haplotypes
 
 # %% ../nbs/04_cross.ipynb 7
-def x_DH(genome: Genome, parent_haplotypes: torch.Tensor) -> torch.Tensor:
+def x_DH(genome: Genome, parent_haplotypes: torch.Tensor, reps: int) -> torch.Tensor:
     """
-    Generate doubled haploid individuals from a set of parent haplotypes.
+    Generate doubled haploid individuals from a set of parent haplotypes with distinct samples for each repetition.
 
     Args:
     ----
-        parent_haplotypes (torch.Tensor): Haplotypes of the parents. 
-                                           Shape: (n_parents, ploidy, chr, loci)
         genome (Genome): Genome object.
+        parent_haplotypes (torch.Tensor): Haplotypes of the parents. 
+                                          Shape: (n_parents, ploidy, chr, loci)
+        reps (int): Number of times to repeat the DH process with distinct samples.
 
     Returns:
     -------
         torch.Tensor: Haplotypes of the doubled haploid progeny. 
-                      Shape: (n_parents, ploidy, chr, loci)
+                      Shape: (n_parents, reps, ploidy, chr, loci)
     """
-    gametes = simulate_gametes(genome, parent_haplotypes)
-    dh_haplotypes = gametes.repeat(1, 2, 1, 1)  # Duplicate the gametes along ploidy dimension
+    ploidy, n_chr, n_loci = genome.shape()  # Assuming genome.shape() returns (ploidy, n_chr, n_loci)
+    n_parents = parent_haplotypes.shape[0]
+    # Each parent represents a new family created by this script
+    all_dh_haplotypes_by_family = torch.zeros((n_parents, reps, ploidy, n_chr, n_loci), device=parent_haplotypes.device)
+    
+    # Need to loop through the reps/n_parents to fill the all_dh_haplotypes_by_family
+    for rep in range(reps):
+        gametes = simulate_gametes(genome, parent_haplotypes)  # Returns (n_parents, ploidy//2, n_chr, n_loci)
+        # Create doubled haploid by copying the gametes into the ploidy axis
+        doubled_haploids = torch.cat([gametes, gametes], dim=1)  # Concatenate gametes to double the haploid number
+        all_dh_haplotypes_by_family[:, rep, :, :, :] = doubled_haploids
+    
+    return all_dh_haplotypes_by_family
 
-    return dh_haplotypes

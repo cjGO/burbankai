@@ -35,10 +35,9 @@ class Genome:
         self.chromosome_length = chromosome_length
 
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        self.genetic_map = None 
+        self.create_genetic_map() 
         
-        self.create_genetic_map()
-
+        
     def shape(self) -> Tuple[int, int, int]:
         """Returns the shape of the genome (ploidy, chromosomes, loci)."""
         return self.ploidy, self.n_chromosomes, self.n_loci_per_chromosome
@@ -72,34 +71,35 @@ class Individual:
 
     Args:
         genome (Genome): Reference to the shared Genome object.
-        haplotypes (torch.Tensor): Tensor representing the individual's haplotypes. 
+        haplotypes (torch.Tensor): Tensor representing the individual's haplotypes.
                                     Shape: (ploidy, n_chromosomes, n_loci_per_chromosome).
         id (Optional[str]): Unique identifier. Defaults to None.
         mother_id (Optional[str]): Mother's identifier. Defaults to None.
         father_id (Optional[str]): Father's identifier. Defaults to None.
-        breeding_values (Optional[torch.Tensor]): Breeding values for traits. Shape: (n_traits,). Defaults to None.
+        breeding_values (Optional[torch.Tensor]): Breeding values for traits. 
+                                                   Shape: (n_traits,). Defaults to None.
         phenotypes (Optional[torch.Tensor]): Phenotype for traits. Shape: (n_traits,). Defaults to None.
     """
-    
+
     def __init__(self, 
-                 genome: Genome, 
+                 genome: 'Genome', 
                  haplotypes: torch.Tensor, 
                  id: Optional[str] = None, 
                  mother_id: Optional[str] = None, 
                  father_id: Optional[str] = None, 
                  breeding_values: Optional[torch.Tensor] = None, 
                  phenotypes: Optional[torch.Tensor] = None):
-        
-        self.genome: Genome = genome
-        self.haplotypes: torch.Tensor = haplotypes.to('cpu')
-        self.id: Optional[str] = id
-        self.mother_id: Optional[str] = mother_id
-        self.father_id: Optional[str] = father_id
-        self.breeding_values: Optional[torch.Tensor] = breeding_values 
-        self.phenotypes: Optional[torch.Tensor] = phenotypes 
+
+        self.genome = genome
+        self.haplotypes = haplotypes.to(self.genome.device)
+        self.id = id
+        self.mother_id = mother_id
+        self.father_id = father_id
+        self.breeding_values = breeding_values
+        self.phenotypes = phenotypes
 
     @classmethod
-    def create_random_individual(cls, genome: Genome, id: Optional[str] = None):
+    def create_random_individual(cls, genome: 'Genome', id: Optional[str] = None) -> 'Individual':
         """
         Creates a random individual with the specified genome.
 
@@ -110,17 +110,8 @@ class Individual:
         Returns:
             Individual: A new Individual object with random haplotypes.
         """
-        haplotypes = torch.randint(0, 2, genome.shape(), device='cpu')
+        haplotypes = torch.randint(0, 2, genome.shape(), device=genome.device)
         return cls(genome=genome, haplotypes=haplotypes, id=id)
-
-    def to(self, device: torch.device):
-        """Moves the individual's data to the specified device."""
-        self.haplotypes = self.haplotypes.to(device)
-        if self.breeding_values is not None:
-            self.breeding_values = self.breeding_values.to(device)
-        if self.phenotypes is not None:
-            self.phenotypes = self.phenotypes.to(device)
-        return self
 
 
 class Population:
@@ -131,12 +122,12 @@ class Population:
         individuals (List[Individual], optional): List of Individual objects in the population. Defaults to None.
         id (Optional[str]): Unique identifier for the population. Defaults to None.
     """
-    
+
     def __init__(self, individuals: Optional[List[Individual]] = None, id: Optional[str] = None):
         self.individuals = individuals if individuals is not None else []
-        self.id = id 
+        self.id = id
 
-    def create_random_founder_population(self, genome: Genome, n_founders: int):
+    def create_random_founder_population(self, genome: 'Genome', n_founders: int):
         """
         Creates a founder population with random haplotypes.
 
@@ -144,7 +135,8 @@ class Population:
             genome (Genome): The genome object.
             n_founders (int): The number of founder individuals to create.
         """
-        self.individuals = [Individual.create_random_individual(genome, id=str(i)) for i in range(n_founders)]
+        self.individuals = [Individual.create_random_individual(genome, id=str(i)) 
+                            for i in range(n_founders)]
 
     def size(self) -> int:
         """Returns the number of individuals in the population."""
@@ -159,7 +151,7 @@ class Population:
                           (population_size, ploidy, n_chromosomes, n_loci_per_chromosome).
         """
         return torch.stack([individual.haplotypes for individual in self.individuals])
-    
+
     def get_dosages(self) -> torch.Tensor:
         """
         Calculates the allele dosage for each locus in the population by summing over the ploidy.
@@ -168,32 +160,32 @@ class Population:
             torch.Tensor: Allele dosage tensor with shape 
                           (population_size, n_chromosomes, n_loci_per_chromosome).
         """
-        genotypes = self.get_genotypes()
-        allele_dosage = genotypes.sum(dim=1) # Sum over the ploidy dimension
-        return allele_dosage
+        return self.get_genotypes().sum(dim=1)  # Sum over the ploidy dimension
 
     def add_individual(self, individual: Individual):
         """Adds an individual to the population."""
         self.individuals.append(individual)
 
-    def to(self, device: torch.device):
-        """Moves all individuals in the population to the specified device."""
-        for individual in self.individuals:
-            individual.to(device)
-        return self
-
     def calculate_allele_frequencies(self) -> torch.Tensor:
-        """Calculates allele frequencies for each locus in the population."""
-        genotypes = self.get_genotypes().float()
-        return genotypes.mean(dim=(0, 1)) # Average over ploidy and individuals
+        """
+        Calculates allele frequencies for each locus in the population.
+
+        Returns:
+            torch.Tensor: Allele frequencies (n_chromosomes, n_loci_per_chromosome).
+        """
+        return self.get_genotypes().float().mean(dim=(0, 1)) # Average over ploidy and individuals
 
     def calculate_genetic_diversity(self) -> torch.Tensor:
-        """Calculates a measure of genetic diversity (e.g., heterozygosity)."""
-        # Example implementation (you can customize this based on your needs)
-        allele_frequencies = self.calculate_allele_frequencies()
-        return 1.0 - (allele_frequencies**2 + (1 - allele_frequencies)**2) 
+        """
+        Calculates a measure of genetic diversity (e.g., heterozygosity).
 
-# %% ../nbs/01_core.ipynb 9
+        Returns:
+            torch.Tensor: Genetic diversity (n_chromosomes, n_loci_per_chromosome).
+        """
+        allele_frequencies = self.calculate_allele_frequencies()
+        return 1.0 - (allele_frequencies**2 + (1 - allele_frequencies)**2)
+
+# %% ../nbs/01_core.ipynb 8
 from torch.utils.data import Dataset, DataLoader
 
 class PopulationDataset(Dataset):

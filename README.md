@@ -37,35 +37,29 @@ import torch
 ```
 
 ``` python
-g = Genome()
-founder_pop = Population()
-founder_pop.create_random_founder_population(g, 30)
+ploidy = 2
+n_chr = 10
+n_loci = 100
+n_Ind = 333
+g = Genome(ploidy, n_chr, n_loci)
+population = Population()
+population.create_random_founder_population(g, n_founders=n_Ind)
+init_pop = population.get_dosages().float()  # gets allele dosage for calculating trait values
+
 # multi_traits
 target_means = torch.tensor([0, 5, 20])
 target_vars = torch.tensor([1, 1, 0.5])  # Note: I'm assuming you want a variance of 1 for the second trait
-correlation_values = [
+correlation_matrix = [
         [1.0, 0.2, 0.58],
         [0.2, 1.0, -0.37],
         [0.58, -0.37, 1.0],
     ]
-traits = corr_traits(g, founder_pop.get_dosages().float(), target_means, target_vars, correlation_values)
+correlation_matrix = torch.tensor(correlation_matrix)
+
+ta = TraitModule(g, population, target_means, target_vars, correlation_matrix,100)
+ta(population.get_dosages()).shape
 ```
 
     Created genetic map
 
-``` python
-f1 = x_random(g, founder_pop.get_genotypes().float(), 50) 
-f1.shape
-```
-
-    torch.Size([50, 2, 10, 5])
-
-``` python
-DH = x_DH(g,f1)
-```
-
-``` python
-DH.shape
-```
-
-    torch.Size([50, 2, 10, 5])
+    torch.Size([333, 3])
