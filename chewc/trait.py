@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = ['select_qtl_loci', 'TraitModule']
 
-# %% ../nbs/02_trait.ipynb 3
+# %% ../nbs/02_trait.ipynb 4
 from .core import *
 import torch
 import attr

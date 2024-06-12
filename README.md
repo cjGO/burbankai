@@ -33,14 +33,10 @@ pip install chewc
 First, define the genome of your crop
 
 ``` python
-import torch
-```
-
-``` python
 ploidy = 2
 n_chr = 10
-n_loci = 100
-n_Ind = 333
+n_loci = 1000
+n_Ind = 100
 g = Genome(ploidy, n_chr, n_loci)
 population = Population()
 population.create_random_founder_population(g, n_founders=n_Ind)
@@ -62,4 +58,10 @@ ta(population.get_dosages()).shape
 
     Created genetic map
 
-    torch.Size([333, 3])
+    torch.Size([100, 3])
+
+``` python
+random_crosses(g,population,250)
+```
+
+    26.5 ms ± 995 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)

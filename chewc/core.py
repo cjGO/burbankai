@@ -3,13 +3,13 @@
 # %% auto 0
 __all__ = ['Genome', 'Individual', 'Population', 'PopulationDataset', 'create_population_dataloader']
 
-# %% ../nbs/01_core.ipynb 4
+# %% ../nbs/01_core.ipynb 5
 import torch
 from typing import List, Tuple, Union, Callable, Optional
 import torch
 import matplotlib.pyplot as plt
 
-# %% ../nbs/01_core.ipynb 6
+# %% ../nbs/01_core.ipynb 7
 class Genome:
     """
     Represents the genomic architecture for the simulation.
@@ -185,7 +185,7 @@ class Population:
         allele_frequencies = self.calculate_allele_frequencies()
         return 1.0 - (allele_frequencies**2 + (1 - allele_frequencies)**2)
 
-# %% ../nbs/01_core.ipynb 8
+# %% ../nbs/01_core.ipynb 9
 from torch.utils.data import Dataset, DataLoader
 
 class PopulationDataset(Dataset):
