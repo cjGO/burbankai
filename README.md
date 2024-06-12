@@ -34,55 +34,38 @@ First, define the genome of your crop
 
 ``` python
 import torch
+```
 
-ploidy = 2
-n_chr = 10
-n_loci = 100
-n_Ind = 3330
-g = Genome(ploidy, n_chr, n_loci)
-population = Population()
-population.create_random_founder_population(g, n_founders=n_Ind)
-init_pop = population.get_dosages().float()  # gets allele dosage for calculating trait values
-
+``` python
+g = Genome()
+founder_pop = Population()
+founder_pop.create_random_founder_population(g, 30)
 # multi_traits
-
-
-target_means = torch.tensor([0, 5])
-target_vars = torch.tensor([1, 1])  # Note: I'm assuming you want a variance of 1 for the second trait
+target_means = torch.tensor([0, 5, 20])
+target_vars = torch.tensor([1, 1, 0.5])  # Note: I'm assuming you want a variance of 1 for the second trait
 correlation_values = [
-        [1.0, 0.8],
-        [0.8, 1.0],
+        [1.0, 0.2, 0.58],
+        [0.2, 1.0, -0.37],
+        [0.58, -0.37, 1.0],
     ]
-
-
-correlated_traits = corr_traits(g, init_pop, target_means, target_vars, correlation_values)
+traits = corr_traits(g, founder_pop.get_dosages().float(), target_means, target_vars, correlation_values)
 ```
 
     Created genetic map
 
 ``` python
-current_pop = init_pop
+f1 = x_random(g, founder_pop.get_genotypes().float(), 50) 
+f1.shape
+```
+
+    torch.Size([50, 2, 10, 5])
+
+``` python
+DH = x_DH(g,f1)
 ```
 
 ``` python
-new_parents = population.get_genotypes().float()
-means = []
-for i in range(10):
-    curr_pop = random_crosses(g, new_parents, 200)
-    new_pheno = correlated_traits[0](curr_pop.sum(dim=1))
-    means.append(new_pheno.mean())
-    topk = torch.topk(new_pheno,10) # select  top 50 parents
-    new_parents = curr_pop.float()[topk.indices]
+DH.shape
 ```
 
-``` python
-plt.scatter(range(len(means)),means)
-```
-
-![](index_files/figure-commonmark/cell-6-output-1.png)
-
-``` python
-plt.scatter(correlated_traits[0](init_pop,h2=.5),correlated_traits[1](init_pop,h2=1))
-```
-
-![](index_files/figure-commonmark/cell-8-output-1.png)
+    torch.Size([50, 2, 10, 5])
