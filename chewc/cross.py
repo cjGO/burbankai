@@ -3,7 +3,7 @@
 # %% auto 0
 __all__ = ['random_crosses']
 
-# %% ../nbs/04_cross.ipynb 4
+# %% ../nbs/04_cross.ipynb 3
 from .core import *
 from .trait import *
 from .meiosis import *
@@ -11,8 +11,8 @@ from typing import Tuple, Optional, List, Union
 
 import torch
 
-# %% ../nbs/04_cross.ipynb 5
-def random_crosses( genome: Genome, parent_haplotypes: Population, n_crosses: int) -> torch.Tensor:
+# %% ../nbs/04_cross.ipynb 4
+def random_crosses( genome: Genome, population: Population, n_crosses: int, reps: int) -> torch.Tensor:
     """
     Generate random crosses from a set of parent haplotypes.
 
@@ -31,9 +31,9 @@ def random_crosses( genome: Genome, parent_haplotypes: Population, n_crosses: in
 
     # assert len(parent_haplotypes.shape) == 4, f"Your input was {parent_haplotypes.shape} when it should be (#parents,ploidy,#chr,#loci)"
     device = genome.device
-    n_parents = parent_haplotypes.size()
+    n_parents = population.size()
 
-    parent_haplotypes = parent_haplotypes.get_genotypes()
+    parent_haplotypes = population.get_genotypes()
     # Randomly select parents for each cross
     female_indices = torch.randint(0, n_parents, (n_crosses,), device=device)
     male_indices = torch.randint(0, n_parents, (n_crosses,), device=device)
@@ -44,10 +44,10 @@ def random_crosses( genome: Genome, parent_haplotypes: Population, n_crosses: in
     male_haplotypes = parent_haplotypes[male_indices]
 
     # Simulate gametes
-    female_gametes = simulate_gametes(genome, female_haplotypes)
-    male_gametes = simulate_gametes(genome, male_haplotypes)
+    female_gametes = simulate_gametes(genome, female_haplotypes, reps = reps,)
+    male_gametes = simulate_gametes(genome, male_haplotypes, reps=reps)
 
     # Combine gametes to form progeny haplotypes
-    progeny_haplotypes = torch.cat([female_gametes, male_gametes], dim=1)
+    progeny_haplotypes = torch.cat([female_gametes, male_gametes], dim=2)
 
     return progeny_haplotypes

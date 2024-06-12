@@ -61,7 +61,7 @@ ta(population.get_dosages()).shape
     torch.Size([100, 3])
 
 ``` python
-random_crosses(g,population,250)
+random_crosses(g, population, 10, reps = 6).shape
 ```
 
-    26.5 ms ± 995 µs per loop (mean ± std. dev. of 7 runs, 10 loops each)
+    torch.Size([10, 6, 2, 10, 1000])

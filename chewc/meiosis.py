@@ -3,12 +3,13 @@
 # %% auto 0
 __all__ = ['simulate_gametes', 'poisson_crossing_over']
 
-# %% ../nbs/03_meiosis.ipynb 5
+# %% ../nbs/03_meiosis.ipynb 4
 import torch
 from .core import *
 from typing import Tuple, Optional, List, Union
+import torch
 
-def simulate_gametes(genome, parent_genomes, rate =1 , shape=1):
+def simulate_gametes(genome, parent_genomes, rate=1, shape=1, reps=1):
     """
     Simulate the formation of gametes for multiple parents using vectorized operations.
 
@@ -16,10 +17,13 @@ def simulate_gametes(genome, parent_genomes, rate =1 , shape=1):
         genome (Genome): The Genome instance containing the genetic map and other parameters.
         parent_genomes (torch.Tensor): Genomes of the parents.
                                        Shape: (num_individuals, ploidy, num_chromosomes, num_loci)
+        rate (float): Rate parameter for the crossover model.
+        shape (float): Shape parameter for the crossover model.
+        reps (int): Number of repetitions to generate novel gametes.
 
     Returns:
         torch.Tensor: The resultant gametes.
-                      Shape: (num_individuals, ploidy//2, num_chromosomes, num_loci)
+                      Shape: (num_individuals, reps, ploidy//2, num_chromosomes, num_loci)
     """
     device = genome.device
     genetic_map = genome.genetic_map  # torch.Size([num_chromosomes, num_loci])
@@ -28,31 +32,29 @@ def simulate_gametes(genome, parent_genomes, rate =1 , shape=1):
     chromosome_lengths = genetic_map.max(dim=1).values
 
     # Simulate crossover positions for all chromosomes at once
-#     all_crossovers = gamma_interference_model(chromosome_lengths, rate, shape, device)
     all_crossovers = poisson_crossing_over(chromosome_lengths)
 
+    # Initialize gametes tensor with an additional dimension for repetitions
+    gametes = torch.zeros(num_individuals, reps, ploidy // 2, num_chromosomes, num_loci, device=device, dtype=parent_genomes.dtype)
 
+    for rep in range(reps):
+        for chr_idx in range(num_chromosomes):
+            crossovers = all_crossovers[chr_idx]
 
-    # Initialize gametes tensor
-    gametes = torch.zeros(num_individuals, ploidy // 2, num_chromosomes, num_loci, device=device, dtype=parent_genomes.dtype)
+            if len(crossovers) > 0:
+                crossover_mask = torch.zeros(num_loci, device=device, dtype=torch.bool)
+                positions_idx = torch.searchsorted(genetic_map[chr_idx], crossovers)
+                crossover_mask[positions_idx] = True
 
-    for chr_idx in range(num_chromosomes):
-        crossovers = all_crossovers[chr_idx]
+                parent_genome_1 = parent_genomes[:, ::2, chr_idx]
+                parent_genome_2 = parent_genomes[:, 1::2, chr_idx]
 
-        if len(crossovers) > 0:
-            crossover_mask = torch.zeros(num_loci, device=device, dtype=torch.bool)
-            positions_idx = torch.searchsorted(genetic_map[chr_idx], crossovers)
-            crossover_mask[positions_idx] = True
-
-            parent_genome_1 = parent_genomes[:, ::2, chr_idx]
-            parent_genome_2 = parent_genomes[:, 1::2, chr_idx]
-
-            for ploid_idx in range(ploidy // 2):
-                gametes[:, ploid_idx, chr_idx] = torch.where(crossover_mask.unsqueeze(0),
-                                                             parent_genome_1[:, ploid_idx],
-                                                             parent_genome_2[:, ploid_idx])
-        else:
-            gametes[:, :, chr_idx] = parent_genomes[:, ::2, chr_idx]
+                for ploid_idx in range(ploidy // 2):
+                    gametes[:, rep, ploid_idx, chr_idx] = torch.where(crossover_mask.unsqueeze(0),
+                                                                      parent_genome_1[:, ploid_idx],
+                                                                      parent_genome_2[:, ploid_idx])
+            else:
+                gametes[:, rep, :, chr_idx] = parent_genomes[:, ::2, chr_idx]
 
     return gametes
 
