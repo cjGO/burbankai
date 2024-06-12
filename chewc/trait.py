@@ -39,37 +39,34 @@ def select_qtl_loci(num_qtl_per_chromosome: int, genome: Genome) -> torch.Tensor
     
     return torch.stack(qtl_indices).to(genome.device)
 
-
-
 class TraitModule(nn.Module):
     """
     Module for managing and simulating multiple correlated additive traits.
     """
-    def __init__(self, genome: Genome,founder_pop, target_means: torch.Tensor, target_vars: torch.Tensor, 
-                 correlation_matrix: torch.Tensor, n_qtl_per_chromosome: int):
+    def __init__(self, genome: Genome, founder_pop, target_means: torch.Tensor, target_vars: torch.Tensor, 
+                 correlation_matrix: Optional[torch.Tensor], n_qtl_per_chromosome: int):
         """
         Initializes the TraitModule.
 
         Args:
             genome (Genome): The genome object.
-            target_means (torch.Tensor): Target means for each trait (n_traits).
-            target_vars (torch.Tensor): Target variances for each trait (n_traits).
-            correlation_matrix (torch.Tensor): Correlation matrix between traits (n_traits, n_traits).
+            target_means (torch.Tensor): Target means for each trait (n_traits or 1 for single trait).
+            target_vars (torch.Tensor): Target variances for each trait (n_traits or 1 for single trait).
+            correlation_matrix (Optional[torch.Tensor]): Correlation matrix between traits (n_traits, n_traits) or None for single trait.
             n_qtl_per_chromosome (int): Number of QTLs per chromosome for each trait.
         """
         super().__init__()
         self.genome = genome
         self.founder_pop = founder_pop
-        self.n_traits = len(target_means)
-        self.target_means = target_means.to(genome.device)
-        self.target_vars = target_vars.to(genome.device)
-        self.correlation_matrix = correlation_matrix.to(genome.device)
+        self.n_traits = 1 if target_means.dim() == 0 else len(target_means)
+        self.target_means = target_means.to(genome.device).view(-1)
+        self.target_vars = target_vars.to(genome.device).view(-1)
+        self.correlation_matrix = correlation_matrix.to(genome.device) if correlation_matrix is not None else None
         self.n_qtl_per_chromosome = n_qtl_per_chromosome
         
         self.qtl_loci = select_qtl_loci(n_qtl_per_chromosome, genome)
         self.effects = self._initialize_correlated_effects()
         self.intercepts = self._calculate_intercepts()
-        
 
     def _initialize_correlated_effects(self) -> torch.Tensor:
         """
@@ -80,13 +77,14 @@ class TraitModule(nn.Module):
         """
         n_chr, n_loci = self.genome.genetic_map.shape
         
-        L = torch.linalg.cholesky(self.correlation_matrix)
-
-        uncorrelated_effects = torch.randn(n_chr, n_loci, self.n_traits, device=self.genome.device)
-        uncorrelated_effects = uncorrelated_effects.reshape(n_chr * n_loci, self.n_traits)
-
-        correlated_effects = torch.matmul(L, uncorrelated_effects.T).T
-        return correlated_effects.reshape(n_chr, n_loci, self.n_traits)
+        if self.correlation_matrix is not None:
+            L = torch.linalg.cholesky(self.correlation_matrix)
+            uncorrelated_effects = torch.randn(n_chr, n_loci, self.n_traits, device=self.genome.device)
+            uncorrelated_effects = uncorrelated_effects.reshape(n_chr * n_loci, self.n_traits)
+            correlated_effects = torch.matmul(L, uncorrelated_effects.T).T
+            return correlated_effects.reshape(n_chr, n_loci, self.n_traits)
+        else:
+            return torch.randn(n_chr, n_loci, self.n_traits, device=self.genome.device)
 
     def _calculate_intercepts(self) -> torch.Tensor:
         """
@@ -99,15 +97,13 @@ class TraitModule(nn.Module):
         Returns:
             torch.Tensor: Trait intercepts (n_traits).
         """
-        # Example: Calculate intercepts based on a founder population
         dosages = self.founder_pop.get_dosages()
         unscaled_bvs = self.calculate_breeding_values(dosages, scale_effects=False)
         unscaled_var = unscaled_bvs.var(dim=0, unbiased=False)
         unscaled_mean = unscaled_bvs.mean(dim=0)
         
         scaling_factors = torch.sqrt(self.target_vars / unscaled_var)
-#         import pdb; pdb.set_trace()
-        self.effects *= scaling_factors.view(1, 1, 3)  # Scale the effects
+        self.effects *= scaling_factors.view(1, 1, self.n_traits)  # Scale the effects
         return self.target_means - (unscaled_mean * scaling_factors)
 
     def calculate_breeding_values(self, dosages: torch.Tensor, scale_effects: bool = True) -> torch.Tensor:
@@ -156,3 +152,4 @@ class TraitModule(nn.Module):
             return breeding_values + env_noise
         else:
             return breeding_values  # No noise added
+

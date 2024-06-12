@@ -52,6 +52,16 @@ correlation_matrix = [
     ]
 correlation_matrix = torch.tensor(correlation_matrix)
 
+# multi_traits
+target_means = torch.tensor([0, 5, 20])
+target_vars = torch.tensor([1, 1, 0.5])  # Note: I'm assuming you want a variance of 1 for the second trait
+correlation_matrix = [
+        [1.0, 0.2, 0.58],
+        [0.2, 1.0, -0.37],
+        [0.58, -0.37, 1.0],
+    ]
+correlation_matrix = torch.tensor(correlation_matrix)
+
 ta = TraitModule(g, population, target_means, target_vars, correlation_matrix,100)
 ta(population.get_dosages()).shape
 ```
