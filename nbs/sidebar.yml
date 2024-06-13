@@ -3,3 +3,12 @@ website:
     contents:
       - index.ipynb
       - 01_core.ipynb
+      - 02_trait.ipynb
+      - 03_meiosis.ipynb
+      - 04_cross.ipynb
+      - 05_agent.ipynb
+      - exp1.ipynb
+      - marl.ipynb
+      - section: core
+        contents:
+          - core/01_genome.ipynb
