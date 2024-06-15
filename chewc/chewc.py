@@ -35,7 +35,6 @@ class Trait:
         founder_scores = np.array([random_effects @ x.haplotype for x in population.individuals])
         founder_mean, founder_var = founder_scores.mean(), founder_scores.var()
         #scale the random effects to match our target variance
-#         import pdb;pdb.set_trace()
         scaling_factors = np.sqrt(self.target_variance / founder_var)
         random_effects *= scaling_factors
         self.effects = random_effects
@@ -70,8 +69,15 @@ class Population:
         return np.array([x.fitness for x in self.individuals])
     
     def __getitem__(self, index):
+        # Convert numpy arrays to lists for indexing
+        if isinstance(index, np.ndarray):
+            index = index.tolist()
+        # Handle list of indices
+        if isinstance(index, list):
+            return [self.individuals[i] for i in index]
+        # Handle single index
         return self.individuals[index]
-
+    
     def __repr__(self):
         return f'Population of size: {self.size}'
     
@@ -102,16 +108,7 @@ class Individual:
     def _generate_random_haplotype(self):
         """Generate a random haplotype for the individual."""
         return np.random.choice([0, 1], size=(self.genome.ploidy, self.genome.n_chr, self.genome.n_loci))
-    
-
-
-
-
-        
-import numpy as np
-import matplotlib.pyplot as plt
-from fastcore.basics import patch
-
+         
 
 # to do move this in another module
 @patch
@@ -153,7 +150,6 @@ def gamete(self:Individual):
         new_chromosome.extend(chromosome_pair[current_chr][last_loc:])
         return np.array(new_chromosome)
 
-
     # Initialize an empty array to store the shuffled chromosomes
     shuffled_haplotypes = np.zeros_like(haplotypes)
     ploidy, n_chr, n_loci = chewc.genome.shape
@@ -163,8 +159,6 @@ def gamete(self:Individual):
         shuffled_chromosome = shuffle_chr(chromosome_pair)  # Shuffle the chromosome pair    
         shuffled_haplotypes[:, i, :] = np.array(shuffled_chromosome).reshape(1, n_loci)  # Store the shuffled chromosome
     return shuffled_haplotypes[0,:,:]
-
-
 
 class Trait:
     def __init__(self, genome, founder_population, target_mean, target_variance):
@@ -193,8 +187,6 @@ def x(self:Individual, partner):
         
         progeny = Individual(self.genome, progeny_haplo, self.id, partner.id,source=source, chewc = chewc)
         return progeny
-
-
     
 @patch
 def __matmul__(self:Trait,other):
@@ -238,8 +230,36 @@ def trial(self:Population, h2):
 
     def __repr__(self):
         return f'Population of size: {self.size}'
-    
-    
+
+@patch
+def truncation(self:Population, top_percent):
+    """
+    Returns the indexes of phenotypes in the top percent.
+
+    Args:
+        top_percent (float): The top percentage of individuals to select (0 < top_percent <= 100).
+    """
+    # Ensure the top_percent is within the valid range
+    if top_percent <= 0 or top_percent > 100:
+        raise ValueError("top_percent must be between 0 and 100")
+
+    # Calculate the number of individuals to select
+    num_to_select = int(population.size * top_percent / 100)
+
+    # Get the phenotypes of all individuals
+    phenotypes = self.get_pheno()
+    assert phenotypes.sum() != 0, 'no phenotypes present'
+#     print(phenotypes)
+
+    # Get the indices that would sort the array in descending order
+    sorted_indices = np.argsort(phenotypes)[::-1]
+
+    # Select the top individuals based on the sorted indices
+    top_indices = sorted_indices[:num_to_select]
+
+    return self[top_indices]
+
+
 #Define the Simulation Parameters
 g = Genome(3, 1000)
 population = Population(g, size=999)
