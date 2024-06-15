@@ -7,8 +7,11 @@ website:
       - 03_meiosis.ipynb
       - 04_cross.ipynb
       - 05_agent.ipynb
+      - Untitled.ipynb
       - exp1.ipynb
       - marl.ipynb
+      - x01_chewc.ipynb
+      - x02_chewc.ipynb
       - section: core
         contents:
           - core/01_genome.ipynb
