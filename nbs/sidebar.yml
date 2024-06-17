@@ -8,9 +8,11 @@ website:
       - 04_cross.ipynb
       - 05_agent.ipynb
       - Untitled.ipynb
+      - Untitled1.ipynb
       - exp1.ipynb
       - marl.ipynb
       - x01_chewc.ipynb
+      - x02_chewc-Copy1.ipynb
       - x02_chewc.ipynb
       - section: core
         contents:
