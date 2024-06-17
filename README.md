@@ -28,6 +28,8 @@ implementation in real-world breeding programs.
 pip install chewc
 ```
 
+![Phenotype Animation](phenotype_animation.gif)
+
 ## How to use
 
 First, define the genome of your crop
