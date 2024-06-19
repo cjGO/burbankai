@@ -5,7 +5,7 @@ __all__ = ['device', 'Genome', 'Population', 'Trait', 'calculate_breeding_value'
            'phenotype', 'create_random_pop', 'update_pop', 'breed', 'create_pop', 'bv', 'create_progeny',
            'run_generation']
 
-# %% ../nbs/x02_chewc.ipynb 3
+# %% ../nbs/x02_chewc.ipynb 1
 import torch
 import matplotlib.pyplot as plt
 from fastcore.basics import patch
