@@ -4,7 +4,8 @@
 __all__ = ['device', 'input_length', 'pop_size', 'dummy_geno_data', 'num_meta_features', 'Genome', 'Population', 'Trait',
            'calculate_breeding_value', 'truncation_selection', 'recombine', 'phenotype', 'create_random_pop',
            'update_pop', 'breed', 'create_pop', 'bv', 'create_progeny', 'run_generation', 'population_statistics',
-           'BreedingSimulation', 'GeneticFeatureExtractor', 'MetaDataProcessor', 'CompleteNetwork', 'create_dummy_data']
+           'BreedingSimulation', 'GeneticFeatureExtractor', 'MetaDataProcessor', 'CompleteNetwork', 'create_dummy_data',
+           'prep']
 
 # %% ../nbs/chewc2.ipynb 1
 import torch
@@ -31,6 +32,7 @@ class Population:
         self.phenotypes = None
         self.haplotypes = haplotypes
         self.dosages = haplotypes.sum(dim=1).float()
+        self.size = haplotypes.shape[0]
                 
 class Trait:
     def __init__(self, genome, founder_population, target_mean, target_variance, device=device):
@@ -375,7 +377,8 @@ class CompleteNetwork(nn.Module):
 def create_dummy_data(batch_size, channels, length):
     return torch.randn(batch_size, channels, length)
 
-
+def prep(tensor):
+    return tensor.view(tensor.shape[0], tensor.shape[1], -1)
 
 # Example usage with different input sizes
 input_length = 7000  # Change this to any length
