@@ -145,12 +145,15 @@ def run_generation(P, T, h2, reps, pop_size, selection_fraction):
 
 # %% ../nbs/chewc2.ipynb 4
 def population_statistics(population_tensor):
+    """
+    
+    """
     
     #Calculate the mean genotype value divided by 2 for each marker.
     def calculate_allele_frequencies(genotypes):
         num_individuals = genotypes.size(0)
         allele_frequencies = torch.mean(genotypes, dim=0) / 2
-        return allele_frequencies
+        return allele_frequencies.float()
     #Calculate the unique genotype counts and their frequencies.
     def calculate_genotype_frequencies(genotypes):
         num_individuals = genotypes.size(0)
@@ -161,12 +164,12 @@ def population_statistics(population_tensor):
     def calculate_heterozygosity(genotypes):
         num_individuals = genotypes.size(0)
         heterozygosity = torch.sum(genotypes == 1, dim=0).float() / num_individuals
-        return heterozygosity
+        return heterozygosity.float()
     #Calculate the frequency of the less common allele.
     def calculate_maf(genotypes):
         allele_frequencies = calculate_allele_frequencies(genotypes)
         maf = torch.minimum(allele_frequencies, 1 - allele_frequencies)
-        return maf
+        return maf.float()
     #Measure the degree of inbreeding based on observed and expected heterozygosity.
     def calculate_inbreeding_coefficient(genotypes):
         num_markers = genotypes.size(1)
@@ -174,12 +177,12 @@ def population_statistics(population_tensor):
         expected_heterozygosity = 2 * calculate_allele_frequencies(genotypes) * (1 - calculate_allele_frequencies(genotypes))
         average_expected_heterozygosity = torch.mean(expected_heterozygosity)
         inbreeding_coefficient = 1 - (observed_heterozygosity / average_expected_heterozygosity)
-        return inbreeding_coefficient
+        return inbreeding_coefficient.float()
     #Calculate the correlation matrix for the genotypes.
     def calculate_ld(genotypes):
         num_markers = genotypes.size(1)
         ld_matrix = torch.corrcoef(genotypes.T)
-        return ld_matrix
+        return ld_matrix.float()
     #Measure the genetic differentiation between subpopulations.
     def calculate_fst(genotypes, subpopulations):
         total_allele_frequencies = calculate_allele_frequencies(genotypes)
@@ -208,7 +211,7 @@ def population_statistics(population_tensor):
     }
     return stats
 
-# %% ../nbs/chewc2.ipynb 6
+# %% ../nbs/chewc2.ipynb 10
 class BreedingSimulation:
     def __init__(self, G, T, h2, reps, pop_size, selection_fraction):
         self.G = G
@@ -302,7 +305,7 @@ class BreedingSimulation:
         plt.show()
 
 
-# %% ../nbs/chewc2.ipynb 8
+# %% ../nbs/chewc2.ipynb 12
 import torch
 import torch.nn as nn
 
